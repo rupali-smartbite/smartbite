@@ -59,7 +59,6 @@ Sugar-free and diet variants are never matched to the regular product.
 
 | Name | What for | Needed? |
 |---|---|---|
-| `SITE_PASSWORD` | Locks the whole site behind a password page (`netlify/edge-functions/gate.js`). Remove it to open the site to everyone. Deploy again after changing it. | Optional |
 | `ASSET_UPLOAD_KEY` | Lets the owner upload new app photos. Leave unset to keep uploads switched off. | Optional |
 | `VISITOR_SALT` | Any long random text. Makes visitor hashes impossible to reverse. | Recommended |
 | AI Gateway | Switched on in Netlify (AI features). No key needed in the code. | For photo scan and Bitu |
