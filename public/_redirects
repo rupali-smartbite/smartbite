@@ -1,0 +1,17 @@
+# Fallback for any old image/video paths: free photo (Unsplash) and video (Pexels) CDNs.
+/img/thali.jpg  https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=900&q=70&auto=format&fit=crop  302
+/img/spices.jpg  https://images.unsplash.com/photo-1716816211590-c15a328a5ff0?w=900&q=70&auto=format&fit=crop  302
+/img/market.jpg  https://images.unsplash.com/photo-1697425206245-250e9c651119?w=900&q=70&auto=format&fit=crop  302
+/img/panipuri.jpg  https://images.unsplash.com/photo-1781243680771-1fea4521e196?w=900&q=70&auto=format&fit=crop  302
+/img/vadapav.jpg  https://images.unsplash.com/photo-1750767397012-3413ba4fdbc7?w=900&q=70&auto=format&fit=crop  302
+/img/samosa.jpg  https://images.unsplash.com/photo-1601050690597-df0568f70950?w=900&q=70&auto=format&fit=crop  302
+/img/dosa.jpg  https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=900&q=70&auto=format&fit=crop  302
+/img/fruits.jpg  https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=900&q=70&auto=format&fit=crop  302
+/img/salad.jpg  https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=900&q=70&auto=format&fit=crop  302
+/img/chips.jpg  https://images.unsplash.com/photo-1760997707695-f0b5527e5de9?w=900&q=70&auto=format&fit=crop  302
+/img/sweets.jpg  https://images.unsplash.com/photo-1758910536889-43ce7b3199fd?w=900&q=70&auto=format&fit=crop  302
+/img/drink.jpg  https://images.unsplash.com/photo-1527960471264-932f39eb5846?w=900&q=70&auto=format&fit=crop  302
+/img/spread.jpg  https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=900&q=70&auto=format&fit=crop  302
+/vid/thali.mp4  https://videos.pexels.com/video-files/34877658/14777959_540_960_30fps.mp4  302
+/vid/street.mp4  https://videos.pexels.com/video-files/34705782/14710715_540_960_30fps.mp4  302
+/vid/vadapav.mp4  https://videos.pexels.com/video-files/39873486/17004108_540_960_30fps.mp4  302

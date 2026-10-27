@@ -1,0 +1,32 @@
+# SmartBite Pro on Netlify: static app in public/, API in netlify/functions/.
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Product photos come from Open Food Facts and food photos from Unsplash. Netlify's
+# image CDN resizes, sharpens to WebP and caches them close to the user.
+[images]
+  remote_images = ['https://images\.openfoodfacts\.org/.*', 'https://images\.unsplash\.com/.*']
+
+# ---------------- Security headers ----------------
+# CSP: only our own code runs, plus the barcode scanner from unpkg (pinned with an
+# integrity hash in index.html). No inline scripts. Pages cannot be framed by other sites.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://images.openfoodfacts.org; media-src 'self' blob: https://videos.pexels.com; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+
+# The app shell must always be fresh so security and data fixes reach phones at once
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
