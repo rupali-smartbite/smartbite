@@ -75,7 +75,7 @@ document.addEventListener('playing', (e) => { const el = e.target; if (el && el.
 // Short free clips (Pexels) with a food fact on each, shown as swipeable stories on Home
 const STORIES = [
   { v: '8879794/8879794-sd_338_640_25fps', img: 124, tag: '🥤 Cola', big: '≈ 9 tsp', t: 'of sugar in one 330 ml can of cola', c: '#E63946' },
-  { v: '10973447/10973447-sd_640_360_30fps', img: 100, tag: '🍟 Chips', big: '≈ 1/3', t: "of a child's daily salt in one 52 g pack of salted chips", c: '#FB8500' },
+  { v: '10973447/10973447-sd_640_360_30fps', img: 100, tag: '🍟 Chips', big: 'up to ⅓', t: "of a child's daily salt in one 52 g pack of masala chips", c: '#FB8500' },
   { v: '5987260/5987260-sd_640_360_25fps', img: 112, tag: '🍬 Sugar', big: '6 tsp', t: "of added sugar a day is WHO's ideal limit for adults", c: '#FF5D8F' },
   { v: '35675125/15117993_360_640_60fps', img: 127, tag: '🍎 Fresh', big: '0 labels', t: 'to read on fresh fruit and veg. Scan your plate to see why', c: '#20B26B' },
   { v: '5025935/5025935-sd_640_360_30fps', img: 144, tag: '🥗 Plate', big: '½ plate', t: 'should be vegetables and fruit, says ICMR-NIN', c: '#2F80ED' },

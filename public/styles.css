@@ -1203,3 +1203,21 @@ body.pre-login .site-foot { display: block; }
 .fchip { flex: none; width: 92px; border: 0; background: var(--card); border-radius: 18px; padding: 6px 6px 8px; box-shadow: var(--shadow); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--ink); font: 700 12.5px/1.15 var(--display); text-align: center; transition: transform .15s; }
 .fchip img { width: 80px; height: 80px; border-radius: 14px; object-fit: cover; background: var(--soft); }
 .fchip:active { transform: scale(.95); }
+
+/* ---------- Light mode look: warm cream + rangoli dots, with pastel section bands ---------- */
+:root[data-theme="light"] { --bg: #FFF3E2; --soft: #FBE6CC; --line: #F2D9B8; --card: #FFFFFF; }
+:root[data-theme="light"][data-palette="pudina"], :root[data-theme="light"][data-palette="pista"] { --bg: #EEF8F1; --soft: #D9F0E2; --line: #C6E7D3; }
+:root[data-theme="light"][data-palette="neela"], :root[data-theme="light"][data-palette="ocean"] { --bg: #EEF5FD; --soft: #DCEAF9; --line: #C9DDF3; }
+:root[data-theme="light"][data-palette="gulabi"], :root[data-theme="light"][data-palette="rose"] { --bg: #FFF0F4; --soft: #FBDDE7; --line: #F2C9D7; }
+:root[data-theme="light"][data-palette="jamuni"], :root[data-theme="light"][data-palette="neon"] { --bg: #F5F0FE; --soft: #E8DEFB; --line: #DACDF5; }
+:root[data-theme="light"] body {
+  background-color: var(--bg);
+  background-image: radial-gradient(color-mix(in srgb, var(--kesar) 16%, transparent) 1.3px, transparent 1.5px);
+  background-size: 22px 22px;
+  background-attachment: fixed;
+}
+:root[data-theme="light"] #view > section:is(:not([class]), .finder) { border-radius: 30px; margin: 16px 8px; padding: 18px 0 14px; background: #E3F5EB; }
+:root[data-theme="light"] #view > section:is(:not([class]), .finder):nth-of-type(4n+2) { background: #FFE6D4; }
+:root[data-theme="light"] #view > section:is(:not([class]), .finder):nth-of-type(4n+3) { background: #EEE7FB; }
+:root[data-theme="light"] #view > section:is(:not([class]), .finder):nth-of-type(4n+4) { background: #E1EEFB; }
+:root[data-theme="light"] .card, :root[data-theme="light"] .meal-card { background: #FFFFFF; border: 0; box-shadow: 0 3px 14px rgba(120, 60, 20, .10); }
