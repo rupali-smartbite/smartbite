@@ -1175,3 +1175,31 @@ body.pre-login .site-foot { display: block; }
   background-attachment: fixed;
 }
 :root[data-theme="light"] .card, :root[data-theme="light"] .meal-card { border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+
+/* ---------- Soft night mode: dusky theme colour instead of black ---------- */
+:root[data-theme="dark"] { --shade-bg: 43, 33, 64; --bg: #2B2140; --soft: #3A2D55; --line: #4A3C68; --card: #33274B; --ink: #F7F3FC; --muted: #CFC4E2; }
+:root[data-theme="dark"][data-palette="mango"],   :root[data-theme="dark"][data-palette="kesar"]   { --bg: #3A2618; --soft: #4A3322; --line: #5C432E; --card: #43301F; --muted: #E6D2BE; }
+:root[data-theme="dark"][data-palette="ocean"],   :root[data-theme="dark"][data-palette="neela"]   { --bg: #1C2C46; --soft: #273B5C; --line: #344B70; --card: #22344F; --muted: #C9D8EE; }
+:root[data-theme="dark"][data-palette="rose"],    :root[data-theme="dark"][data-palette="gulabi"]  { --bg: #3C1F31; --soft: #4D2A40; --line: #603651; --card: #462638; --muted: #EBC8D8; }
+:root[data-theme="dark"][data-palette="pista"],   :root[data-theme="dark"][data-palette="pudina"]  { --bg: #18352C; --soft: #22463A; --line: #2E5848; --card: #1E3F34; --muted: #C3E2D4; }
+:root[data-theme="dark"][data-palette="neon"],    :root[data-theme="dark"][data-palette="jamuni"]  { --bg: #2C2050; --soft: #3A2C66; --line: #4A3B7C; --card: #34275C; --muted: #D3C8F0; }
+:root[data-theme="dark"][data-palette="chandan"] { --bg: #33291F; --soft: #43372A; --line: #554636; --card: #3C3125; --muted: #E3D4C2; }
+:root[data-theme="dark"] body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(60vmax 45vmax at 0% 0%, color-mix(in srgb, var(--haldi) 16%, transparent), transparent 70%),
+    radial-gradient(55vmax 45vmax at 100% 30%, color-mix(in srgb, var(--gulab) 14%, transparent), transparent 70%),
+    radial-gradient(60vmax 50vmax at 30% 100%, color-mix(in srgb, var(--pudina) 12%, transparent), transparent 70%);
+  background-attachment: fixed;
+}
+:root[data-theme="dark"] .card, :root[data-theme="dark"] .meal-card, :root[data-theme="dark"] .row { background: var(--card); border-color: var(--line); }
+:root[data-theme="dark"] .meal-side.bad { background: color-mix(in srgb, var(--mirchi) 18%, var(--card)); }
+:root[data-theme="dark"] .meal-side.good { background: color-mix(in srgb, var(--pudina) 18%, var(--card)); }
+:root[data-theme="dark"] .aaj, :root[data-theme="dark"] .today, :root[data-theme="dark"] .look-preview, :root[data-theme="dark"] .junk-band { background: var(--card); }
+
+/* Popular dish chips under the swap search */
+.fpop { display: flex; gap: 10px; overflow-x: auto; padding: 12px 16px 4px; scrollbar-width: none; }
+.fpop::-webkit-scrollbar { display: none; }
+.fchip { flex: none; width: 92px; border: 0; background: var(--card); border-radius: 18px; padding: 6px 6px 8px; box-shadow: var(--shadow); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--ink); font: 700 12.5px/1.15 var(--display); text-align: center; transition: transform .15s; }
+.fchip img { width: 80px; height: 80px; border-radius: 14px; object-fit: cover; background: var(--soft); }
+.fchip:active { transform: scale(.95); }

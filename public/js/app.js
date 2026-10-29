@@ -860,6 +860,17 @@ const heavyOf = (n) => (/soup|rasam/i.test(n) ? 1 : /with (whole-wheat )?(roti|r
   : /salad|raita|chaas|coconut water|whole fruit|fruit chaat|nimbu|dates|cashews|boiled/i.test(n) ? 1 : 2);
 const RELATED = { chicken: ['chicken', 'fish', 'egg', 'paneer', 'dal', 'veg'], fish: ['fish', 'chicken', 'egg', 'dal', 'paneer', 'veg'], egg: ['egg', 'chicken', 'fish', 'paneer', 'dal', 'veg'],
   paneer: ['paneer', 'dal', 'egg', 'veg', 'chicken', 'fish'], dal: ['dal', 'paneer', 'veg', 'egg', 'fish', 'chicken'], veg: ['veg', 'dal', 'paneer', 'egg', 'fish', 'chicken'] };
+// Extra street and restaurant favourites for the finder (photos in /img/dishes/)
+const EXTRA_DISHES = [
+  { name: 'Misal pav', img: '/img/dishes/misal-pav.jpg', d: 'veg', fam: 'dal', to: 'Sprouts salad with corn', why: 'Keep the protein-rich sprouts, but skip the oily tarri, farsan and white pav.' },
+  { name: 'Dabeli', img: '/img/dishes/dabeli.jpg', d: 'veg', to: 'Methi thepla with curd', why: 'Dabeli is buttered maida pav with sev. Thepla is whole wheat with methi leaves, and curd adds protein.' },
+  { name: 'Pani puri', img: '/img/panipuri.jpg', d: 'veg', to: 'Sprouts chaat', why: 'The same tangy chaat taste from moong sprouts, without the deep-fried puris.' },
+  { name: 'Bhel puri', img: '/img/dishes/bhel-puri.jpg', d: 'veg', to: 'Sprouts chaat', why: 'Sprouts add protein and fibre. Go easy on the sev and sweet chutney.' },
+  { name: 'Fried momos', img: '/img/dishes/fried-momos.jpg', d: 'veg', to: 'Steamed dhokla', why: 'Fried momos soak up oil. Steamed snacks like dhokla, or steamed momos, are much lighter.' },
+  { name: 'Chole kulche', img: '/img/dishes/chole-kulche.jpg', d: 'veg', to: 'Chana masala with roti', why: 'Keep the chole, and swap the buttered maida kulcha for a whole-wheat roti.' },
+  { name: 'Chicken 65', img: '/img/dishes/chicken-65.jpg', d: 'nonveg', to: 'Chicken hariyali kebab', why: 'Chicken 65 is deep-fried with added colour. Kebabs are marinated in mint and grilled.' },
+];
+const fImg = (x) => (typeof x === 'string' ? x : mealImg(x));
 let FINDER = null; // { dishes, alts } built once
 function finderData() {
   if (FINDER) return FINDER;
@@ -869,6 +880,7 @@ function finderData() {
     dishes.push({ name: m.from, img: m.fi, slot, d: m.d === 'veg' ? dietOf(m.from) : m.d, fam: famOf(m.from), to: m.to, why: m.why });
     addAlt(m.to, m.ti, slot);
   }
+  EXTRA_DISHES.forEach((x) => dishes.push({ name: x.name, img: x.img, slot: 'street', d: x.d, fam: x.fam || famOf(x.name), to: x.to, why: x.why }));
   SWAP_IDEAS.forEach((x, i) => {
     if (!dishes.some((d) => d.name.toLowerCase() === x.from.toLowerCase())) dishes.push({ name: x.from, img: 100 + i * 2, slot: x.cat, d: 'veg', fam: famOf(x.from), to: x.to, why: x.why });
     addAlt(x.to, 101 + i * 2, x.cat);
@@ -881,8 +893,9 @@ function altsFor(dish) {
   const { alts } = finderData();
   const order = RELATED[dish.fam] || RELATED.veg;
   const snack = ['snacks', 'sweets', 'drinks'].includes(dish.slot);
-  return alts.filter((a) => a.name !== dish.name && dietAllows(a.d) && (snack ? ['snacks', 'sweets', 'drinks'].includes(a.slot) : !['snacks', 'sweets', 'drinks'].includes(a.slot)))
-    .map((a) => ({ a, r: (a.name === dish.to ? -100 : 0) + order.indexOf(a.fam) * 10 + (a.slot === dish.slot ? 0 : 3) + a.h }))
+  const fits = (a) => (dish.slot === 'street' ? !['sweets', 'drinks'].includes(a.slot) : snack ? ['snacks', 'sweets', 'drinks'].includes(a.slot) : !['snacks', 'sweets', 'drinks'].includes(a.slot)) || a.name === dish.to;
+  return alts.filter((a) => a.name !== dish.name && dietAllows(a.d) && fits(a))
+    .map((a) => ({ a, r: (a.name === dish.to ? -100 : 0) + order.indexOf(a.fam) * 10 + (a.slot === dish.slot || (dish.slot === 'street' && ['snacks', 'breakfast'].includes(a.slot)) ? 0 : 3) + a.h }))
     .sort((x, y) => x.r - y.r).map((x) => x.a);
 }
 const altWhy = (dish, a) => {
@@ -900,9 +913,9 @@ function finderCard() {
   const left = FS.left || dish;
   return `<article class="meal-card finder-card">
       <div class="meal-pair">
-        <figure class="meal-side bad"><img src="${mealImg(left.img)}" alt="" data-ld><figcaption><small>Instead of</small><b>${esc(left.name)}</b></figcaption></figure>
+        <figure class="meal-side bad"><img src="${fImg(left.img)}" alt="" data-ld><figcaption><small>Instead of</small><b>${esc(left.name)}</b></figcaption></figure>
         <div class="vs"><span>→</span></div>
-        <figure class="meal-side good"><img src="${mealImg(a.img)}" alt="" data-ld><figcaption><small>Try this ${dietMark(a.d)}</small><b>${esc(a.name)}</b></figcaption></figure>
+        <figure class="meal-side good"><img src="${fImg(a.img)}" alt="" data-ld><figcaption><small>Try this ${dietMark(a.d)}</small><b>${esc(a.name)}</b></figcaption></figure>
       </div>
       <p class="meal-why">${esc(altWhy(left.to ? left : dish, a))}</p>
       ${FS.msg ? `<p class="finder-msg">${esc(FS.msg)}</p>` : ''}
@@ -921,9 +934,9 @@ function wireFinder() {
   const open = () => {
     const q = inp.value.trim().toLowerCase();
     const { dishes } = finderData();
-    shown = dishes.filter((d) => dietAllows(d.d) && (!q || d.name.toLowerCase().includes(q) || q.split(/\s+/).every((w) => d.name.toLowerCase().includes(w)))).slice(0, 8);
+    shown = dishes.filter((d) => dietAllows(d.d) && (!q || d.name.toLowerCase().includes(q) || q.split(/\s+/).every((w) => d.name.toLowerCase().includes(w)))).slice(0, 60);
     active = -1;
-    lb.innerHTML = shown.length ? shown.map((d, i) => `<li role="option" id="fo-${i}" data-fi="${i}" aria-selected="false"><img src="${mealImg(d.img)}" alt="" loading="lazy">${dietMark(d.d)}<span>${esc(d.name)}</span></li>`).join('')
+    lb.innerHTML = shown.length ? shown.map((d, i) => `<li role="option" id="fo-${i}" data-fi="${i}" aria-selected="false"><img src="${fImg(d.img)}" alt="" loading="lazy">${dietMark(d.d)}<span>${esc(d.name)}</span></li>`).join('')
       : '<li class="none" role="option" aria-disabled="true">No match yet. Try "chicken", "paneer", "samosa" or "pizza".</li>';
     lb.hidden = false; inp.setAttribute('aria-expanded', 'true');
   };
@@ -955,6 +968,11 @@ function wireFinder() {
       FS.left = { ...cur, to: null }; FS.i = altsFor(FS.left).indexOf(lighter[0]); FS.msg = ''; render();
     }
   });
+  // Popular dishes as tappable photo chips, so the list is visible without typing
+  const POP = ['Vada pav', 'Misal pav', 'Pav bhaji with butter', 'Samosa', 'Pani puri', 'Dabeli', 'Chole bhature', 'Bhel puri', 'Fried momos', 'Chole kulche', 'Butter chicken with butter naan', 'Chicken 65', 'Restaurant chicken biryani', 'Egg puff', 'Pizza', 'Instant noodles', 'Aloo paratha with butter', 'Kachori'];
+  const pop = POP.map((n) => finderData().dishes.find((d) => d.name === n)).filter((d) => d && dietAllows(d.d));
+  $('#fpop').innerHTML = pop.map((d) => `<button class="fchip" data-pop="${esc(d.name)}"><img src="${fImg(d.img)}" alt="" loading="lazy"><span>${esc(d.name.replace(/ with butter.*| with butter naan/, ''))}</span></button>`).join('');
+  $('#fpop').onclick = (e) => { const b = e.target.closest('[data-pop]'); if (b) { pick(finderData().dishes.find((d) => d.name === b.dataset.pop)); $('#fout').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'nearest' }); } };
   if (FS.dish) { inp.value = FS.dish.name; render(); }
 }
 
@@ -973,6 +991,7 @@ function screenSwaps() {
         <input id="fq" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="flist" autocomplete="off" placeholder="Type a dish, e.g. butter chicken" aria-label="Type a dish">
         <ul id="flist" class="finder-list" role="listbox" aria-label="Dishes" hidden></ul>
       </div>
+      <div class="fpop" id="fpop" aria-label="Popular dishes"></div>
       <div id="fout"></div>
     </section>
 
