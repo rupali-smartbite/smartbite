@@ -196,6 +196,7 @@ function applyTheme() {
   document.documentElement.setAttribute('data-palette', S.profile.palette || 'masala');
   document.documentElement.setAttribute('data-text', S.profile.textSize || 'normal');
   document.documentElement.setAttribute('data-motion', S.profile.motion || 'auto');
+  if (!document.body.classList.contains('theme-ready')) setTimeout(() => document.body.classList.add('theme-ready'), 600); // no colour fade on first load
   const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.content = (PALETTES.find((x) => x[0] === S.profile.palette) || PALETTES[0])[2][0];
   document.documentElement.lang = S.profile.lang;
 }
