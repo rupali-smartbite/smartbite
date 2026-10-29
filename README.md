@@ -19,18 +19,31 @@ Atal Tinkering Lab project.
 
 ```
 public/                 the website
-  index.html            page shell
+  index.html            app shell: splash, no-JS fallback, HTML templates
+  about.html            project page (plain HTML)
   styles.css            all styling (light/dark themes)
   js/app.js             screens, login, scanning, swaps, shop, games
   js/score.js           health scoring rules (adult and child verdicts, junk meter)
   js/data.js            built-in products, fresh foods, additives
   js/india-db.js        verified Indian-pack products (Sprite, Maaza, Haldiram's, Parle...)
   js/i18n.js            English, Hindi, Marathi text
+  js/validate.js        partner form checks (used by the app and the server)
 netlify/functions/      the API, one file per address (/api/...)
 netlify/lib/            shared backend code (Open Food Facts, security guard, shop)
 database/               the whole built-in database as Excel and JSON
 netlify.toml            hosting settings and security headers
 ```
+
+## Why index.html is small, and why "Inspect" shows more
+
+SmartBite is a **single-page app**, the same way Gmail or YouTube on the web work.
+
+- `public/index.html` is the **app shell**: page structure, splash screen, the no-JavaScript fallback, search-engine data and HTML `<template>`s for fixed screens such as the Partner form.
+- Screens that depend on your data (home, scan results, swaps, games, tracker) are built by `public/js/app.js` while the app runs. For example `screenHome()` and `screenSwaps()` write that screen's HTML.
+- So when you right-click → **Inspect** on the live site, you see the **live page after JavaScript has filled it in**, which is much more HTML than the file. GitHub counts the HTML written inside JavaScript files as JavaScript, which is why the language bar shows mostly JavaScript and CSS.
+- `public/about.html` is a normal static HTML page about the project.
+
+Why build it this way: switching screens never reloads the page, so it feels like a phone app and works well on slow mobile internet.
 
 ## How verdicts stay consistent
 

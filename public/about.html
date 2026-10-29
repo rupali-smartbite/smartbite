@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About SmartBite: AI food health scanner for India</title>
+<meta name="description" content="About the SmartBite project: the problem it solves, how verdicts are worked out, features, technology and privacy.">
+<meta name="theme-color" content="#5B2A86">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Mukta:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .ab { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .ab-hero { background: linear-gradient(135deg, #5B2A86, #8E3FC9); color: #fff; border-radius: 0 0 28px 28px; padding: 28px 20px 30px; margin: 0 -16px 8px; }
+  .ab-hero img { width: 56px; height: 56px; }
+  .ab-hero h1 { font-size: 34px; margin: 8px 0 4px; }
+  .ab-hero p { opacity: .92; font-size: 17px; }
+  .ab-hero .ab-cta { display: inline-block; margin-top: 14px; background: #FFB703; color: #241433; font-weight: 800; padding: 10px 18px; border-radius: 99px; }
+  .ab h2 { margin: 28px 0 10px; color: var(--jamun); }
+  .ab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .ab-grid .card { margin: 0; }
+  .ab-grid b { display: block; font: 800 26px var(--display); color: var(--jamun); }
+  .ab table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
+  .ab th, .ab td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .ab th { background: var(--soft); font-family: var(--display); }
+  .ab ol li, .ab ul li { margin: 6px 0; }
+  .ab .src { font-size: 13px; color: var(--muted); }
+  .ab footer { margin-top: 36px; text-align: center; color: var(--muted); font-size: 14px; }
+  .ab a { color: var(--jamun); font-weight: 700; }
+  .ab-hero a.ab-cta { color: #241433; }
+</style>
+</head>
+<body>
+<div class="ab">
+  <header class="ab-hero">
+    <img src="/logo.svg" alt="">
+    <h1>SmartBite</h1>
+    <p>An AI food health scanner for India. Scan. Know. Eat smart.</p>
+    <p>An Atal Tinkering Lab project.</p>
+    <a class="ab-cta" href="/">Open the app</a>
+  </header>
+
+  <main>
+    <section aria-labelledby="problem">
+      <h2 id="problem">The problem</h2>
+      <p>Food labels are hard to read, and packaged snacks and sugary drinks are part of everyday life for many Indian children and families. At the same time, lifestyle diseases are rising.</p>
+      <div class="ab-grid">
+        <div class="card"><b>10.1 crore</b>Indians live with diabetes</div>
+        <div class="card"><b>13.6 crore</b>more have pre-diabetes</div>
+        <div class="card"><b>31.5 crore</b>have high blood pressure</div>
+      </div>
+      <p class="src">Source: ICMR-INDIAB study, The Lancet Diabetes &amp; Endocrinology, 2023.</p>
+    </section>
+
+    <section aria-labelledby="what">
+      <h2 id="what">What SmartBite does</h2>
+      <ul>
+        <li><b>Scan a packet</b> by barcode or photo, or search by name.</li>
+        <li><b>Scan a plate:</b> a photo of a thali, street food or fruit.</li>
+        <li><b>Two verdicts:</b> one for adults and one for children (Good, Okay in moderation, or Avoid), with simple reasons.</li>
+        <li><b>Junk food meter</b> from 0 to 7, and an explanation of every additive and E-number.</li>
+        <li><b>Healthier swaps</b> for breakfast, lunch and dinner, for veg, egg and non-veg, plus a swap finder for any dish.</li>
+        <li><b>Bitu</b>, a friendly food helper that answers in English, Hindi or Marathi.</li>
+        <li><b>Play &amp; Learn</b> games, a daily tracker, SmartBite Coins and a healthy-food shop (payments coming soon).</li>
+        <li><b>Hardware version:</b> an ESP32 device with a screen and LED lights for school canteens, no phone needed.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="how">
+      <h2 id="how">How a verdict is worked out</h2>
+      <p>The same product always gets the same verdict. SmartBite finds the nutrition values in this order:</p>
+      <ol>
+        <li><b>Verified Indian database:</b> real Indian pack values for popular brands. Recipes differ by country: Sprite has 9.8 g sugar per 100 ml in India but 3.3 g in the UK, so Indian values matter.</li>
+        <li><b>Numbers read from the back of the pack</b>, used only when they add up (sugar not more than carbs, calories matching fat, carbs and protein).</li>
+        <li><b>Open Food Facts</b>, the world's open food database, with Indian packs first.</li>
+        <li><b>AI estimate</b>, clearly marked "verify with pack".</li>
+      </ol>
+      <p>The score is then calculated by fixed rules, never by the AI, using WHO and ICMR-NIN daily limits for sugar, salt and saturated fat. Children get stricter limits, and drinks with caffeine are always "Avoid" for children. Data typing errors are corrected before scoring.</p>
+    </section>
+
+    <section aria-labelledby="tech">
+      <h2 id="tech">Technology</h2>
+      <table>
+        <thead><tr><th>Part</th><th>Built with</th></tr></thead>
+        <tbody>
+          <tr><td>Frontend (the app)</td><td>HTML, CSS and JavaScript. A single-page app: index.html is the shell, and JavaScript builds each screen as you use it.</td></tr>
+          <tr><td>Backend (the API)</td><td>JavaScript on Node.js, as Netlify Functions</td></tr>
+          <tr><td>Food data</td><td>SmartBite's verified Indian database and Open Food Facts</td></tr>
+          <tr><td>AI</td><td>Claude, for reading packet and plate photos and for Bitu</td></tr>
+          <tr><td>Storage</td><td>Netlify Blobs for app photos and partner enquiries</td></tr>
+          <tr><td>Hosting</td><td>Netlify</td></tr>
+          <tr><td>Hardware</td><td>ESP32 programmed in C++ (Arduino)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section aria-labelledby="privacy">
+      <h2 id="privacy">Privacy and safety</h2>
+      <ul>
+        <li>Your name, profile, history and coins stay only on your own phone, and are wiped when you log out.</li>
+        <li>The server stores no health data and no IP addresses.</li>
+        <li>No passwords or secret keys are written in the code.</li>
+        <li>The site blocks injected scripts, cannot be embedded by other sites, and always uses HTTPS.</li>
+        <li>SmartBite is for awareness, not medical advice. For health conditions, please ask a doctor or dietitian.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="links">
+      <h2 id="links">Links</h2>
+      <ul>
+        <li>App: <a href="https://smartbite-pro.netlify.app/">smartbite-pro.netlify.app</a></li>
+        <li>Code: <a href="https://github.com/rupali-smartbite/smartbite" rel="noopener">github.com/rupali-smartbite/smartbite</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>SmartBite · Atal Tinkering Lab project · Data: Open Food Facts (ODbL), WHO, ICMR-NIN</p>
+  </footer>
+</div>
+</body>
+</html>

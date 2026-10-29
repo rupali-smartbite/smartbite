@@ -1,13 +1,37 @@
 <!doctype html>
+<!--
+  SmartBite: AI food health scanner for India (Atal Tinkering Lab project)
+
+  How this page works (single-page app):
+  - This file is the app shell: page structure, splash screen, the no-JavaScript fallback,
+    and HTML templates for fixed screens (like the Partner form below).
+  - Screens that change with your data (home, scan results, swaps, games) are built by
+    /js/app.js while the app runs. That is why "Inspect" in the browser shows much more
+    HTML than this file: it shows the live page after JavaScript has filled it in.
+  - Styles: /styles.css. Code: /js/. Project page: /about.html.
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SmartBite Pro</title>
-<meta name="description" content="Scan packets, barcodes, thalis and fresh food. Adult and child health verdicts for Indian food.">
+<title>SmartBite: Scan. Know. Eat smart.</title>
+<meta name="description" content="SmartBite is an AI food health scanner for India. Scan packets, barcodes, thalis and fresh food to get simple health verdicts for adults and children, with healthier Indian swaps.">
+<meta name="keywords" content="food scanner, India, nutrition, healthy swaps, sugar, salt, Atal Tinkering Lab, SmartBite">
+<meta name="author" content="SmartBite team">
 <meta name="theme-color" content="#5B2A86">
+<meta name="color-scheme" content="light dark">
+
+<!-- Link previews (WhatsApp, LinkedIn) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SmartBite">
+<meta property="og:title" content="SmartBite: Scan. Know. Eat smart.">
+<meta property="og:description" content="AI food health scanner for India. Simple verdicts for adults and children, and healthier Indian swaps.">
+<meta property="og:url" content="https://smartbite-pro.netlify.app/">
+<meta name="twitter:card" content="summary">
+
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="/manifest.webmanifest">
+<link rel="canonical" href="https://smartbite-pro.netlify.app/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Mukta:wght@400;500;600;700&display=swap">
@@ -16,13 +40,143 @@
 <link rel="preload" as="image" href="https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=900&q=70&auto=format&fit=crop">
 <link rel="stylesheet" href="/styles.css">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" integrity="sha384-c9d8RFSL+u3exBOJ4Yp3HUJXS4znl9f+z66d1y54ig+ea249SpqR+w1wyvXz/lk+" crossorigin="anonymous" defer></script>
+
+<!-- Structured data for search engines -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SmartBite",
+  "url": "https://smartbite-pro.netlify.app/",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Any (web browser)",
+  "inLanguage": ["en", "hi", "mr"],
+  "description": "AI food health scanner for India with adult and child verdicts and healthier Indian swaps.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" }
+}
+</script>
 </head>
 <body>
-<main id="view" class="wrap"></main>
+<a class="skip-link" href="#view">Skip to main content</a>
+
+<!-- Main screen. The splash below shows while the app loads; app.js then replaces it. -->
+<main id="view" class="wrap" tabindex="-1">
+  <section class="splash" aria-label="SmartBite is loading">
+    <img src="/logo.svg" alt="" width="84" height="84">
+    <h1>SmartBite</h1>
+    <p>Scan. Know. Eat smart.</p>
+    <div class="splash-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <p class="splash-note">Loading your food scanner…</p>
+  </section>
+</main>
+
+<!-- Bottom navigation: filled by app.js once you log in -->
 <nav id="nav" class="nav" aria-label="Main"></nav>
-<script type="module" src="/js/app.js"></script>
+
+<!-- Shown only if JavaScript is switched off -->
+<noscript>
+  <div class="nojs">
+    <img src="/logo.svg" alt="" width="64" height="64">
+    <h1>SmartBite needs JavaScript</h1>
+    <p>SmartBite scans barcodes, packet photos and thalis, and works out a health verdict for adults and children. Please switch on JavaScript in your browser settings to use it.</p>
+    <h2>What SmartBite does</h2>
+    <ul>
+      <li><b>Scan a packet:</b> barcode or photo of any Indian snack, drink or biscuit.</li>
+      <li><b>Scan a plate:</b> photo of a thali, street food or fruit.</li>
+      <li><b>Two verdicts:</b> one for adults and one for children, based on WHO and ICMR-NIN limits for sugar, salt and fat.</li>
+      <li><b>Healthier swaps:</b> breakfast, lunch and dinner ideas for veg, egg and non-veg.</li>
+      <li><b>Bitu:</b> a friendly food helper in English, Hindi and Marathi.</li>
+    </ul>
+    <p><a href="/about.html">Read about the SmartBite project</a></p>
+  </div>
+</noscript>
+
+<!-- ============ HTML templates used by app.js ============ -->
+
+<!-- Partner with SmartBite: enquiry form. Every field is required; the checks are in
+     /js/validate.js and run again on the server (netlify/functions/sponsor.mjs). -->
+<template id="tpl-partner">
+  <form id="sf" class="card form pform" novalidate>
+    <p class="small muted">All fields marked <span class="req" aria-hidden="true">*</span> are required.</p>
+    <input type="text" name="bot-field" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <div class="fld" data-f="company">
+      <label for="f-company">Brand or company name <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-company" name="company" required maxlength="100" autocomplete="organization" placeholder="e.g. Green Leaf Foods">
+      <p class="ferr" id="e-company" role="alert"></p>
+    </div>
+
+    <div class="fld" data-f="contact_name">
+      <label for="f-contact_name">Contact person (full name) <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-contact_name" name="contact_name" required maxlength="60" autocomplete="name" placeholder="e.g. Priya Sharma">
+      <small class="fhint">First and last name</small>
+      <p class="ferr" id="e-contact_name" role="alert"></p>
+    </div>
+
+    <div class="fld" data-f="email">
+      <label for="f-email">Work email <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-email" name="email" type="email" required maxlength="120" autocomplete="email" inputmode="email" placeholder="name@company.com">
+      <small class="fhint">We will reply to this address</small>
+      <p class="ferr" id="e-email" role="alert"></p>
+    </div>
+
+    <div class="fld" data-f="phone">
+      <label for="f-phone">Phone number <span class="req" aria-hidden="true">*</span></label>
+      <div class="ptype" role="radiogroup" aria-label="Type of phone number">
+        <label class="ck"><input type="radio" name="phone_type" value="mobile" checked><span>Mobile</span></label>
+        <label class="ck"><input type="radio" name="phone_type" value="landline"><span>Business landline</span></label>
+        <label class="ck"><input type="radio" name="phone_type" value="tollfree"><span>Toll-free (1800)</span></label>
+      </div>
+      <div class="phone-in">
+        <span class="cc" id="cc">+91</span>
+        <input id="f-phone" name="phone" type="tel" required maxlength="20" autocomplete="tel-national" inputmode="tel" placeholder="98201 23456">
+      </div>
+      <small class="fhint" id="phint">10-digit mobile number starting with 6, 7, 8 or 9</small>
+      <p class="ferr" id="e-phone" role="alert"></p>
+    </div>
+
+    <div class="fld" data-f="budget">
+      <label for="f-budget">Budget range <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-budget" name="budget" required>
+        <option value="">Select…</option>
+        <option>Under ₹25,000</option>
+        <option>₹25,000 – ₹1,00,000</option>
+        <option>₹1,00,000 – ₹5,00,000</option>
+        <option>Above ₹5,00,000</option>
+      </select>
+      <p class="ferr" id="e-budget" role="alert"></p>
+    </div>
+
+    <div class="fld" data-f="message">
+      <label for="f-message">Message <span class="req" aria-hidden="true">*</span></label>
+      <textarea id="f-message" name="message" rows="4" required maxlength="2000" placeholder="Tell us about your brand and the products you want to promote"></textarea>
+      <small class="fhint">At least 20 characters</small>
+      <p class="ferr" id="e-message" role="alert"></p>
+    </div>
+
+    <button class="btn hot" id="sbtn">Send enquiry</button>
+    <p id="smsg" class="small" aria-live="polite"></p>
+  </form>
+</template>
+
+<!-- Netlify Forms: lets Netlify store each partner enquiry and email it to the owner.
+     The app never submits this form directly; the server does after checking the data. -->
 <form name="sponsor" data-netlify="true" netlify-honeypot="bot-field" hidden aria-hidden="true">
-  <input name="bot-field"><input name="company"><input name="contact_name"><input name="email"><input name="phone"><input name="budget"><textarea name="message"></textarea><input name="created_at">
+  <input name="bot-field">
+  <input name="company">
+  <input name="contact_name">
+  <input name="email">
+  <input name="phone_type">
+  <input name="phone">
+  <input name="budget">
+  <textarea name="message"></textarea>
+  <input name="created_at">
 </form>
+
+<footer class="site-foot" aria-label="About">
+  <p>SmartBite · Atal Tinkering Lab project · <a href="/about.html">About the project</a> · <a href="https://github.com/rupali-smartbite/smartbite" rel="noopener">Code on GitHub</a></p>
+</footer>
+
+<script type="module" src="/js/app.js"></script>
 </body>
 </html>

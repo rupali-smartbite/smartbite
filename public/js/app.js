@@ -1,6 +1,7 @@
 import { PRODUCTS, FRESH, ALLERGENS, companyOf } from './data.js';
 import { scoreFor, verdictKey, swaps, fuzzyFind, decodeIngredients, detectAllergens, dietFlags, LIMITS, junkMeter, typeEmoji, normalize } from './score.js';
 import { T } from './i18n.js';
+import { checkEnquiry, checkName, checkCompany, checkEmail, checkPhone, checkMessage } from './validate.js';
 
 const API = (window.__HATCHABLE__ && window.__HATCHABLE__.api) || '/api';
 const $ = (s, el = document) => el.querySelector(s);
@@ -178,6 +179,13 @@ const PALETTES = [
   ['rose', 'Rose', ['#C9184A', '#FFB3C1', '#FF4D6D', '#FF8FA3']],
   ['pista', 'Pista', ['#2D6A4F', '#B7E4C7', '#40916C', '#95D5B2']],
   ['neon', 'Neon', ['#7209B7', '#4CC9F0', '#F72585', '#4361EE']],
+  // Soft pastels: gentle tinted backgrounds in light mode, same accents in dark mode
+  ['peach', 'Soft Peach', ['#FFE8D9', '#C2532B', '#FFD3B8', '#F4A582']],
+  ['mint', 'Soft Mint', ['#E2F5EC', '#1F7A55', '#C8EEDB', '#7FD1AE']],
+  ['lavender', 'Lavender', ['#EFE8FB', '#6B48B8', '#DCD0F5', '#B39DDB']],
+  ['sky', 'Soft Sky', ['#E3F0FB', '#2266A8', '#CCE3F6', '#8EC5EF']],
+  ['blush', 'Blush', ['#FCE8EE', '#B23A62', '#F8D2DE', '#F2A0B8']],
+  ['lemon', 'Lemon', ['#FFF7D6', '#8A6A00', '#FFEDA8', '#F2D35B']],
 ];
 function applyTheme() {
   const th = S.profile.theme;
@@ -815,9 +823,17 @@ function mealDiet() { const d = S.profile.diet; return d === 'egg' || d === 'non
 function mealFor(slot, day) {
   const d = mealDiet();
   const ok = (x) => x.d === 'veg' || (d === 'egg' && x.d === 'egg') || (d === 'nonveg');
-  const list = MEALS[slot].filter(ok);
+  // Egg / non-veg: show those dishes first (rotating daily), then the veg ideas
+  const own = d === 'veg' ? [] : MEALS[slot].filter((x) => x.d !== 'veg' && ok(x));
   const off = { breakfast: 0, lunch: 5, dinner: 11 }[slot];
-  return list[(((day + off + SWD.s[slot]) % list.length) + list.length) % list.length];
+  const mod = (a, n) => ((a % n) + n) % n;
+  if (own.length) {
+    const st = mod(day + off, own.length);
+    const list = [...own.slice(st), ...own.slice(0, st), ...MEALS[slot].filter((x) => x.d === 'veg')];
+    return list[mod(SWD.s[slot], list.length)];
+  }
+  const list = MEALS[slot].filter(ok);
+  return list[mod(day + off + SWD.s[slot], list.length)];
 }
 function mealCard(slot, e, l, day) {
   const m = mealFor(slot, day);
@@ -831,6 +847,115 @@ function mealCard(slot, e, l, day) {
           <p class="meal-why">${esc(m.why)}</p>
         </article>`;
 }
+// ---------- Swap finder: pick any dish, see a healthier choice ----------
+// Two ways to explore: "Another healthy option" keeps your dish and shows a different
+// healthy choice; "One step lighter" moves the current suggestion to "Instead of" and
+// suggests an even lighter dish.
+const famOf = (n) => (/chicken/i.test(n) ? 'chicken' : /fish|meen|pomfret/i.test(n) ? 'fish' : /egg|omelette/i.test(n) ? 'egg' : /paneer/i.test(n) ? 'paneer'
+  : /dal|rajma|chana|chole|sambar|moong|besan|sprouts|pesarattu|khichdi|chilla|dhokla|peanut/i.test(n) ? 'dal' : 'veg');
+const dietOf = (n) => { const f = famOf(n); return f === 'chicken' || f === 'fish' ? 'nonveg' : f === 'egg' ? 'egg' : 'veg'; };
+const heavyOf = (n) => (/soup|rasam/i.test(n) ? 1 : /with (whole-wheat )?(roti|rice|chapati)|thali|pulao|chawal|sandwich|roll|frankie/i.test(n) ? 3
+  : /salad|raita|chaas|coconut water|whole fruit|fruit chaat|nimbu|dates|cashews|boiled/i.test(n) ? 1 : 2);
+const RELATED = { chicken: ['chicken', 'fish', 'egg', 'paneer', 'dal', 'veg'], fish: ['fish', 'chicken', 'egg', 'dal', 'paneer', 'veg'], egg: ['egg', 'chicken', 'fish', 'paneer', 'dal', 'veg'],
+  paneer: ['paneer', 'dal', 'egg', 'veg', 'chicken', 'fish'], dal: ['dal', 'paneer', 'veg', 'egg', 'fish', 'chicken'], veg: ['veg', 'dal', 'paneer', 'egg', 'fish', 'chicken'] };
+let FINDER = null; // { dishes, alts } built once
+function finderData() {
+  if (FINDER) return FINDER;
+  const dishes = [], alts = new Map();
+  const addAlt = (name, img, slot) => { if (!alts.has(name)) alts.set(name, { name, img, slot, fam: famOf(name), d: dietOf(name), h: heavyOf(name) }); };
+  for (const [slot] of MEAL_SLOTS) for (const m of MEALS[slot]) {
+    dishes.push({ name: m.from, img: m.fi, slot, d: m.d === 'veg' ? dietOf(m.from) : m.d, fam: famOf(m.from), to: m.to, why: m.why });
+    addAlt(m.to, m.ti, slot);
+  }
+  SWAP_IDEAS.forEach((x, i) => {
+    if (!dishes.some((d) => d.name.toLowerCase() === x.from.toLowerCase())) dishes.push({ name: x.from, img: 100 + i * 2, slot: x.cat, d: 'veg', fam: famOf(x.from), to: x.to, why: x.why });
+    addAlt(x.to, 101 + i * 2, x.cat);
+  });
+  FINDER = { dishes, alts: [...alts.values()] };
+  return FINDER;
+}
+const dietAllows = (d) => { const u = mealDiet(); return d === 'veg' || (u === 'egg' && d === 'egg') || u === 'nonveg'; };
+function altsFor(dish) {
+  const { alts } = finderData();
+  const order = RELATED[dish.fam] || RELATED.veg;
+  const snack = ['snacks', 'sweets', 'drinks'].includes(dish.slot);
+  return alts.filter((a) => a.name !== dish.name && dietAllows(a.d) && (snack ? ['snacks', 'sweets', 'drinks'].includes(a.slot) : !['snacks', 'sweets', 'drinks'].includes(a.slot)))
+    .map((a) => ({ a, r: (a.name === dish.to ? -100 : 0) + order.indexOf(a.fam) * 10 + (a.slot === dish.slot ? 0 : 3) + a.h }))
+    .sort((x, y) => x.r - y.r).map((x) => x.a);
+}
+const altWhy = (dish, a) => {
+  if (a.name === dish.to) return dish.why;
+  const how = a.h === 1 ? 'Very light, with almost no oil.' : a.h === 2 ? 'Steamed, grilled or lightly cooked instead of fried or creamy.' : 'A balanced home-style plate with whole grains.';
+  const p = { chicken: 'Keeps the chicken protein.', fish: 'Fish adds protein and healthy fats.', egg: 'Eggs give simple, filling protein.', paneer: 'Paneer gives protein and calcium.', dal: 'Dal and pulses give protein and fibre.', veg: 'More vegetables and fibre.' }[a.fam];
+  return `${how} ${p}`;
+};
+const FS = { dish: null, left: null, i: 0, msg: '' };
+function finderCard() {
+  const dish = FS.dish; if (!dish) return '';
+  const list = altsFor(FS.left || dish);
+  const a = list[FS.i % Math.max(1, list.length)];
+  if (!a) return '<p class="muted">No other choices match your food preference.</p>';
+  const left = FS.left || dish;
+  return `<article class="meal-card finder-card">
+      <div class="meal-pair">
+        <figure class="meal-side bad"><img src="${mealImg(left.img)}" alt="" data-ld><figcaption><small>Instead of</small><b>${esc(left.name)}</b></figcaption></figure>
+        <div class="vs"><span>→</span></div>
+        <figure class="meal-side good"><img src="${mealImg(a.img)}" alt="" data-ld><figcaption><small>Try this ${dietMark(a.d)}</small><b>${esc(a.name)}</b></figcaption></figure>
+      </div>
+      <p class="meal-why">${esc(altWhy(left.to ? left : dish, a))}</p>
+      ${FS.msg ? `<p class="finder-msg">${esc(FS.msg)}</p>` : ''}
+      <div class="finder-btns">
+        <button class="another" data-fnext>↻ Another healthy option</button>
+        <button class="another lighter" data-flighter>⬇ One step lighter</button>
+      </div>
+      ${FS.left ? `<button class="link-btn" data-freset>Start again from ${esc(dish.name)}</button>` : ''}
+    </article>`;
+}
+function wireFinder() {
+  const inp = $('#fq'), lb = $('#flist'), out = $('#fout');
+  if (!inp) return;
+  let active = -1, shown = [];
+  const render = () => { out.innerHTML = finderCard(); };
+  const open = () => {
+    const q = inp.value.trim().toLowerCase();
+    const { dishes } = finderData();
+    shown = dishes.filter((d) => dietAllows(d.d) && (!q || d.name.toLowerCase().includes(q) || q.split(/\s+/).every((w) => d.name.toLowerCase().includes(w)))).slice(0, 8);
+    active = -1;
+    lb.innerHTML = shown.length ? shown.map((d, i) => `<li role="option" id="fo-${i}" data-fi="${i}" aria-selected="false"><img src="${mealImg(d.img)}" alt="" loading="lazy">${dietMark(d.d)}<span>${esc(d.name)}</span></li>`).join('')
+      : '<li class="none" role="option" aria-disabled="true">No match yet. Try "chicken", "paneer", "samosa" or "pizza".</li>';
+    lb.hidden = false; inp.setAttribute('aria-expanded', 'true');
+  };
+  const close = () => { lb.hidden = true; inp.setAttribute('aria-expanded', 'false'); inp.removeAttribute('aria-activedescendant'); };
+  const pick = (d) => { if (!d) return; FS.dish = d; FS.left = null; FS.i = 0; FS.msg = ''; inp.value = d.name; close(); render(); };
+  inp.addEventListener('focus', open);
+  inp.addEventListener('input', open);
+  inp.addEventListener('keydown', (e) => {
+    if (lb.hidden && (e.key === 'ArrowDown' || e.key === 'Enter')) { open(); }
+    const items = lb.querySelectorAll('[data-fi]');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); if (!items.length) return;
+      active = (active + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      items.forEach((el, i) => el.setAttribute('aria-selected', i === active ? 'true' : 'false'));
+      inp.setAttribute('aria-activedescendant', 'fo-' + active); items[active].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') { e.preventDefault(); pick(shown[active >= 0 ? active : 0]); }
+    else if (e.key === 'Escape') close();
+  });
+  lb.addEventListener('mousedown', (e) => { const li = e.target.closest('[data-fi]'); if (li) { e.preventDefault(); pick(shown[+li.dataset.fi]); } });
+  if (!wireFinder.docClick) { wireFinder.docClick = true; document.addEventListener('click', (e) => { const l = $('#flist'); if (l && !e.target.closest('.finder-box')) { l.hidden = true; const i = $('#fq'); if (i) i.setAttribute('aria-expanded', 'false'); } }); }
+  out.addEventListener('click', (e) => {
+    if (e.target.closest('[data-fnext]')) { FS.i += 1; FS.msg = ''; render(); }
+    else if (e.target.closest('[data-freset]')) { FS.left = null; FS.i = 0; FS.msg = ''; render(); }
+    else if (e.target.closest('[data-flighter]')) {
+      const list = altsFor(FS.left || FS.dish), cur = list[FS.i % Math.max(1, list.length)];
+      if (!cur) return;
+      const lighter = altsFor(cur).filter((x) => x.h < cur.h && x.name !== (FS.left || FS.dish).name);
+      if (!lighter.length) { FS.msg = `${cur.name} is already one of the lightest choices. Well done!`; render(); return; }
+      FS.left = { ...cur, to: null }; FS.i = altsFor(FS.left).indexOf(lighter[0]); FS.msg = ''; render();
+    }
+  });
+  if (FS.dish) { inp.value = FS.dish.name; render(); }
+}
+
 function screenSwaps() {
   const now = new Date();
   const day = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
@@ -839,6 +964,15 @@ function screenSwaps() {
   view().innerHTML = `
     <header class="bar centred"><h2>${esc(t('swapday'))}</h2></header>
     <div class="page-title centred"><p>A healthier swap for every meal. New ideas every day.</p></div>
+
+    <section class="finder">
+      <div class="sec-head centred"><h3>Find a swap for any dish</h3></div>
+      <div class="finder-box">
+        <input id="fq" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="flist" autocomplete="off" placeholder="Type a dish, e.g. butter chicken" aria-label="Type a dish">
+        <ul id="flist" class="finder-list" role="listbox" aria-label="Dishes" hidden></ul>
+      </div>
+      <div id="fout"></div>
+    </section>
 
     <section>
       <div class="meal-top centred">
@@ -856,8 +990,9 @@ function screenSwaps() {
     </section>
     <p class="foot">Simple swaps for everyday Indian food. For awareness, not medical advice.</p>`;
   view().querySelectorAll('[data-diet]').forEach((b) => (b.onclick = () => {
-    S.profile = { ...S.profile, diet: b.dataset.diet }; store.set('profile', S.profile); SWD.s = { breakfast: 0, lunch: 0, dinner: 0 }; screenSwaps();
+    S.profile = { ...S.profile, diet: b.dataset.diet }; store.set('profile', S.profile); SWD.s = { breakfast: 0, lunch: 0, dinner: 0 }; if (FS.dish && !dietAllows(FS.dish.d)) FS.dish = null; FS.left = null; FS.i = 0; FS.msg = ''; screenSwaps();
   }));
+  wireFinder();
   view().querySelector('.meal-list').onclick = (e) => {
     const b = e.target.closest('[data-another]'); if (!b) return;
     const slot = b.dataset.another; SWD.s[slot] += 1;
@@ -1615,6 +1750,7 @@ function screenProfile() {
       <a class="row" href="#/play"><span class="grow">🎮 Play &amp; Learn games</span>›</a>
       <a class="row" href="#/compare"><span class="grow">⚖️ Compare products</span>›</a>
       <a class="row" href="#/partner"><span class="grow">🤝 ${esc(t('partner'))}</span>›</a>
+      <a class="row" href="/about.html"><span class="grow">ℹ️ About SmartBite</span>›</a>
       <button class="row danger" id="reset"><span class="grow">🗑 Clear my history and tracker</span></button>
       <button class="row danger" id="logout"><span class="grow">🚪 Log out and clear this phone</span></button>
     </div>
@@ -1664,36 +1800,61 @@ function screenPlans() {
 }
 
 // ---------------- Partner ----------------
+// Every field is required. The same checks (validate.js) run here for instant help and
+// again on the server, which also confirms the email's domain really receives mail.
 function screenPartner() {
   view().innerHTML = `
     <div class="res-hero" style="--vc:#5B2A86;padding-bottom:28px">
       <img class="bg" src="${pic('market')}" alt="">
       <header class="bar"><a href="#/home" class="back" aria-label="Back">‹</a><span></span></header>
       <div class="res-title"><small>For brands</small><h1>${esc(t('partner'))}</h1><p style="opacity:.92">One clearly labelled sponsored card on the home and result screens. We only partner with brands that meet our health criteria, and sponsorship never changes a score.</p></div>
-    </div>
-    <form id="sf" class="card form">
-      <label>Brand or company name *<input name="company" required maxlength="200"></label>
-      <label>Contact person<input name="contact_name" maxlength="200"></label>
-      <label>Email *<input name="email" type="email" required maxlength="200"></label>
-      <label>Phone<input name="phone" type="tel" maxlength="50"></label>
-      <label>Budget range<select name="budget"><option value="">Select…</option><option>Under ₹25,000</option><option>₹25,000 – ₹1,00,000</option><option>₹1,00,000 – ₹5,00,000</option><option>Above ₹5,00,000</option></select></label>
-      <label>Message<textarea name="message" rows="4" maxlength="4000"></textarea></label>
-      <button class="btn hot" id="sbtn">Send enquiry</button>
-      <p id="smsg" class="small"></p>
-    </form>`;
-  $('#sf').onsubmit = async (e) => {
+    </div>`;
+  // The form itself is plain HTML in index.html (<template id="tpl-partner">)
+  view().append(document.getElementById('tpl-partner').content.cloneNode(true));
+  const form = $('#sf');
+  const PH = { mobile: ['98201 23456', '10-digit mobile number starting with 6, 7, 8 or 9', '+91'], landline: ['022 2345 6789', 'Area code + number, e.g. 022 for Mumbai, 020 for Pune', '+91'], tollfree: ['1800 123 4567', 'Toll-free numbers start with 1800', ''] };
+  const syncPhone = () => { const ty = form.phone_type.value; $('#f-phone').placeholder = PH[ty][0]; $('#phint').textContent = PH[ty][1]; $('#cc').textContent = PH[ty][2]; $('#cc').hidden = !PH[ty][2]; };
+  form.querySelectorAll('input[name=phone_type]').forEach((r) => r.addEventListener('change', () => { syncPhone(); if ($('#f-phone').value) showErr('phone', checkPhone(form.phone_type.value, $('#f-phone').value).error); }));
+  syncPhone();
+  const showErr = (k, m, fix) => {
+    const box = form.querySelector(`[data-f="${k}"]`), el = $('#e-' + k);
+    box.classList.toggle('bad', !!m); box.classList.toggle('good', !m && !!(form[k] && form[k].value));
+    el.textContent = m || '';
+    if (fix) { const b = document.createElement('button'); b.type = 'button'; b.className = 'fixbtn'; b.textContent = 'Use ' + fix; b.onclick = () => { form.email.value = fix; showErr('email', ''); }; el.append(' ', b); }
+    const inp = form[k]; if (inp && inp.setAttribute) inp.setAttribute('aria-invalid', m ? 'true' : 'false');
+  };
+  const one = (k) => {
+    const v = form[k].value;
+    if (k === 'company') return showErr(k, checkCompany(v));
+    if (k === 'contact_name') return showErr(k, checkName(v));
+    if (k === 'email') { const r = checkEmail(v); return showErr(k, r.error, r.fix); }
+    if (k === 'phone') return showErr(k, checkPhone(form.phone_type.value, v).error);
+    if (k === 'budget') return showErr(k, v ? '' : 'Please choose a budget range.');
+    if (k === 'message') return showErr(k, checkMessage(v));
+  };
+  ['company', 'contact_name', 'email', 'phone', 'budget', 'message'].forEach((k) => {
+    form[k].addEventListener('blur', () => { if (form[k].value) one(k); });
+    form[k].addEventListener('input', () => { if (form.querySelector(`[data-f="${k}"]`).classList.contains('bad')) one(k); });
+  });
+  form.onsubmit = async (e) => {
     e.preventDefault();
     const btn = $('#sbtn'), msg = $('#smsg');
-    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Sending…'; msg.textContent = '';
+    msg.textContent = '';
+    const body = Object.fromEntries(new FormData(form).entries());
+    const v = checkEnquiry(body);
+    ['company', 'contact_name', 'email', 'phone', 'budget', 'message'].forEach((k) => showErr(k, v.errors[k], k === 'email' ? checkEmail(body.email).fix : undefined));
+    if (!v.ok) { msg.className = 'small err'; msg.textContent = 'Please fix the highlighted fields.'; const first = form.querySelector('.fld.bad input, .fld.bad select, .fld.bad textarea'); if (first) first.focus(); return; }
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Sending…';
     try {
-      const body = Object.fromEntries(new FormData(e.target).entries());
       const r = await fetch(API + '/sponsor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json().catch(() => ({}));
+      if (j.errors) Object.entries(j.errors).forEach(([k, m]) => showErr(k, m));
       if (!r.ok || !j.ok) throw new Error(j.error || 'Could not send right now.');
-      e.target.reset(); msg.className = 'small ok'; msg.textContent = 'Enquiry sent. We reply within 2 working days.';
+      form.reset(); syncPhone(); form.querySelectorAll('.fld').forEach((f) => f.classList.remove('good', 'bad'));
+      msg.className = 'small ok'; msg.textContent = 'Enquiry sent. We reply within 2 working days.';
       btn.textContent = 'Sent ✓'; confetti('star');
     } catch (err) {
-      msg.className = 'small err'; msg.textContent = err.message + ' Check your connection and try again.';
+      msg.className = 'small err'; msg.textContent = err.message;
       btn.disabled = false; btn.textContent = 'Send enquiry';
     }
   };

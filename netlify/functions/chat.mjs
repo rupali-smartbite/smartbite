@@ -6,6 +6,8 @@ import { sameSite, limit, deny } from '../lib/guard.mjs';
 const LANGS = { en: 'English', hi: 'Hindi (Devanagari script)', mr: 'Marathi (Devanagari script)' };
 const MODELS = ['claude-haiku-4-5', 'claude-sonnet-4-5-20250929'];
 
+const DISHES = 'dhokla, khandvi, thepla, khakhra, poha, upma, idli, dosa, uttapam, medu vada, pesarattu, appam, puttu, paratha, aloo paratha, thalipeeth, misal pav, pav bhaji, vada pav, sabudana khichdi, khichdi, dal tadka, dal makhani, rajma chawal, chole bhature, kadhi pakora, sambar, rasam, biryani, pulao, paneer butter masala, palak paneer, malai kofta, baingan bharta, bhindi, butter chicken, tandoori chicken, chicken tikka, fish curry, egg curry, egg bhurji, kolkata roll, momos, samosa, kachori, pakora, bhel puri, pani puri, sev puri, dabeli, chakli, chivda, bhujia, jalebi, gulab jamun, rasgulla, ladoo, kheer, halwa, shrikhand, puran poli, modak, lassi, chaas, nimbu pani, kokum sharbat, aam panna, maggi, makhana, roasted chana, sprouts chaat';
+
 const system = (lang, product) => `You are Bitu, the friendly food assistant inside SmartBite Pro, an Indian food-scanner app made as a school Atal Tinkering Lab project. Families, parents and school students use it.
 
 How to answer:
@@ -16,6 +18,13 @@ How to answer:
 - Explain additives and E-numbers simply (e.g. 627/631 flavour enhancers, 330 citric acid, 551 anti-caking agent).
 - Suggest healthier Indian swaps where useful (roasted chana, makhana, fruit, chaas, lassi without much sugar, homemade poha).
 - When it helps, tell the user what to do in the app: scan a barcode, photo of a packet, photo of a thali, Compare, or Junk Food Explorer.
+
+Understanding the question:
+- People often misspell Indian food names or type them in Hinglish (for example "kokal" or "dokla" for dhokla, "pao bhaji" for pav bhaji, "biryni" for biryani). First check whether the word is a close spelling or sound-alike of a real dish, for example from this list: ${DISHES}.
+- If one dish is a clearly close match, answer about that dish and start with "I think you mean <dish>." so the user can correct you.
+- If the word could be two or more different dishes, or you are not sure what it is, do NOT guess and do NOT answer about a different food. Ask one short question instead, for example: "Did you mean dhokla (steamed besan snack) or something else? Tell me a little about it."
+- Never swap the user's food for another food (for example never answer about poha when the user may have meant dhokla). Only suggest a different food when the user asks for a healthier swap.
+- Never invent facts, nutrition numbers or brand claims. If you do not know something, say so simply.
 
 Safety:
 - This is awareness, not medical advice. For allergies, diabetes, pregnancy, medicines or symptoms, give general information and suggest asking a doctor or dietitian.
@@ -44,7 +53,7 @@ export default async (req, context) => {
   const client = new Anthropic();
   for (const model of MODELS) {
     try {
-      const msg = await client.messages.create({ model, max_tokens: 700, system: system(lang, product), messages: msgs }, { timeout: 40000 });
+      const msg = await client.messages.create({ model, max_tokens: 700, temperature: 0.3, system: system(lang, product), messages: msgs }, { timeout: 40000 });
       const reply = (msg.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('').trim();
       if (reply) return out({ ok: true, reply });
     } catch (e) {
