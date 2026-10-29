@@ -1067,19 +1067,40 @@ body.pre-login #nav, body.pre-login .bitu-btn, body.pre-login .bitu-panel { disp
 .meal-card { animation: popIn .35s; }
 .shop-hd { display: flex; gap: 8px; align-items: center; }
 
-/* ---------- Soft pastel palettes (light mode tints the whole app; dark mode keeps dark backgrounds) ---------- */
-:root[data-palette="peach"]    { --jamun: #C2532B; --jamun2: #E07A4F; --haldi: #FFB86B; --kesar: #E8743B; --gulab: #F08A6C; --neel: #D9774B; }
-:root[data-palette="mint"]     { --jamun: #1F7A55; --jamun2: #2FA174; --haldi: #9BE3C1; --kesar: #2E9E6E; --gulab: #5CC49A; --neel: #2A9D8F; }
-:root[data-palette="lavender"] { --jamun: #6B48B8; --jamun2: #8D6BD6; --haldi: #CBB8F2; --kesar: #8A63D2; --gulab: #B08BE8; --neel: #7C6FD6; }
-:root[data-palette="sky"]      { --jamun: #2266A8; --jamun2: #3B86C9; --haldi: #9FD0F5; --kesar: #2F87C8; --gulab: #6BB2E8; --neel: #2F80ED; }
-:root[data-palette="blush"]    { --jamun: #B23A62; --jamun2: #D45A82; --haldi: #F8B8CB; --kesar: #D9577F; --gulab: #EF7FA0; --neel: #C2507A; }
-:root[data-palette="lemon"]    { --jamun: #7A5C00; --jamun2: #A07A00; --haldi: #FFD84D; --kesar: #C99400; --gulab: #E6B800; --neel: #B08900; }
-:root[data-theme="light"][data-palette="peach"]    { --bg: #FFF6F0; --soft: #FFEADD; --line: #F6DCCB; --card: #FFFFFF; }
-:root[data-theme="light"][data-palette="mint"]     { --bg: #F2FBF6; --soft: #DFF4E9; --line: #CDEBDB; --card: #FFFFFF; }
-:root[data-theme="light"][data-palette="lavender"] { --bg: #F7F3FD; --soft: #ECE4FA; --line: #DFD3F4; --card: #FFFFFF; }
-:root[data-theme="light"][data-palette="sky"]      { --bg: #F2F8FE; --soft: #E1EEFA; --line: #CFE2F4; --card: #FFFFFF; }
-:root[data-theme="light"][data-palette="blush"]    { --bg: #FEF4F7; --soft: #FBE3EB; --line: #F4D0DC; --card: #FFFFFF; }
-:root[data-theme="light"][data-palette="lemon"]    { --bg: #FFFBEA; --soft: #FFF2C4; --line: #F3E4A8; --card: #FFFFFF; }
+/* ---------- Soft Indian pastel palettes ----------
+   Light mode: tinted page, hero shade and menu bar. Dark mode: same accents, dark backgrounds. */
+:root { --shade: 36, 20, 51; }
+:root[data-palette="kesar"]   { --jamun: #B45309; --jamun2: #D97706; --haldi: #F6C77D; --kesar: #EA8A1A; --gulab: #F2A65A; --neel: #C2410C; --shade: 92, 45, 8; }
+:root[data-palette="pudina"]  { --jamun: #047857; --jamun2: #059669; --haldi: #8FD9B6; --kesar: #10B981; --gulab: #34D399; --neel: #0F766E; --shade: 4, 60, 44; }
+:root[data-palette="neela"]   { --jamun: #1D4ED8; --jamun2: #3B82F6; --haldi: #93BDF5; --kesar: #2563EB; --gulab: #60A5FA; --neel: #0EA5E9; --shade: 16, 36, 96; }
+:root[data-palette="gulabi"]  { --jamun: #BE185D; --jamun2: #DB2777; --haldi: #F5A3C0; --kesar: #E8558C; --gulab: #F472B6; --neel: #C026D3; --shade: 96, 14, 54; }
+:root[data-palette="jamuni"]  { --jamun: #6D28D9; --jamun2: #8B5CF6; --haldi: #C4B0F5; --kesar: #9061F9; --gulab: #A78BFA; --neel: #7C3AED; --shade: 50, 22, 96; }
+:root[data-palette="chandan"] { --jamun: #8B5E34; --jamun2: #A9743F; --haldi: #D9BE98; --kesar: #B7793A; --gulab: #C99A62; --neel: #7C5A3A; --shade: 70, 46, 24; }
+:root[data-theme="light"][data-palette="kesar"]   { --bg: #FFF8EE; --soft: #FCEBD3; --line: #F3DDBD; }
+:root[data-theme="light"][data-palette="pudina"]  { --bg: #F0FAF5; --soft: #DAF2E6; --line: #C6E9D7; }
+:root[data-theme="light"][data-palette="neela"]   { --bg: #F0F7FF; --soft: #DCEBFB; --line: #C7DCF5; }
+:root[data-theme="light"][data-palette="gulabi"]  { --bg: #FFF2F6; --soft: #FCE1EA; --line: #F5CCDA; }
+:root[data-theme="light"][data-palette="jamuni"]  { --bg: #F7F2FF; --soft: #EBE1FC; --line: #DCCDF7; }
+:root[data-theme="light"][data-palette="chandan"] { --bg: #FBF7F1; --soft: #F1E7D9; --line: #E6D6BF; }
+/* the hero's colour wash and the menu bar follow the chosen palette */
+.hero { background: rgb(var(--shade)); }
+.hero::after { background: linear-gradient(180deg, rgba(var(--shade), .55) 0%, rgba(var(--shade), 0) 28%, rgba(var(--shade), .15) 50%, rgba(var(--shade), .92) 100%); }
+.nav { background: rgba(var(--shade), .94); box-shadow: 0 14px 40px rgba(var(--shade), .4); }
+body { transition: background-color .4s ease, color .4s ease; }
+
+/* ---------- Gentle motion (switched off by "Reduced" animations or the phone's setting) ---------- */
+@keyframes riseIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes popIn { 0% { transform: scale(.92); opacity: 0; } 60% { transform: scale(1.03); opacity: 1; } 100% { transform: scale(1); } }
+#view > .card, #view > section, #view .meal-card, #view .swap-row, #view .pcard, #view .finder-card, #view .fld { animation: riseIn .5s cubic-bezier(.2, .8, .2, 1) both; }
+#view > section:nth-of-type(2), #view .meal-card:nth-child(2), #view .fld:nth-of-type(2) { animation-delay: .06s; }
+#view > section:nth-of-type(3), #view .meal-card:nth-child(3), #view .fld:nth-of-type(3) { animation-delay: .12s; }
+#view .fld:nth-of-type(4) { animation-delay: .18s; } #view .fld:nth-of-type(5) { animation-delay: .24s; } #view .fld:nth-of-type(6) { animation-delay: .3s; }
+.swatch input:checked + .sw { animation: popIn .4s ease both; }
+.btn, .another, .cpill, .ck span, .swatch .sw { transition: transform .15s ease, background .2s, color .2s, box-shadow .2s; }
+.btn:active, .another:active, .cpill:active { transform: scale(.96); }
+@media (hover: hover) { .btn:hover, .another:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(var(--shade), .18); } }
+.finder-list:not([hidden]) { animation: riseIn .2s ease both; }
+@media (prefers-reduced-motion: reduce) { #view > .card, #view > section, #view .meal-card, #view .swap-row, #view .pcard, #view .finder-card, #view .fld, .finder-list { animation: none !important; } }
 
 /* ---------- Partner enquiry form ---------- */
 .pform .fld { display: flex; flex-direction: column; gap: 6px; }

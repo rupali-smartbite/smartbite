@@ -179,18 +179,20 @@ const PALETTES = [
   ['rose', 'Rose', ['#C9184A', '#FFB3C1', '#FF4D6D', '#FF8FA3']],
   ['pista', 'Pista', ['#2D6A4F', '#B7E4C7', '#40916C', '#95D5B2']],
   ['neon', 'Neon', ['#7209B7', '#4CC9F0', '#F72585', '#4361EE']],
-  // Soft pastels: gentle tinted backgrounds in light mode, same accents in dark mode
-  ['peach', 'Soft Peach', ['#FFE8D9', '#C2532B', '#FFD3B8', '#F4A582']],
-  ['mint', 'Soft Mint', ['#E2F5EC', '#1F7A55', '#C8EEDB', '#7FD1AE']],
-  ['lavender', 'Lavender', ['#EFE8FB', '#6B48B8', '#DCD0F5', '#B39DDB']],
-  ['sky', 'Soft Sky', ['#E3F0FB', '#2266A8', '#CCE3F6', '#8EC5EF']],
-  ['blush', 'Blush', ['#FCE8EE', '#B23A62', '#F8D2DE', '#F2A0B8']],
-  ['lemon', 'Lemon', ['#FFF7D6', '#8A6A00', '#FFEDA8', '#F2D35B']],
+  // Soft Indian pastels: tinted background, hero and menu bar in light mode; dark mode keeps dark backgrounds
+  ['kesar', 'Kesar Cream', ['#FCEBD3', '#B45309', '#F6C77D', '#FFF8EE']],
+  ['pudina', 'Pudina Mint', ['#DAF2E6', '#047857', '#8FD9B6', '#F0FAF5']],
+  ['neela', 'Neela Sky', ['#DCEBFB', '#1D4ED8', '#93BDF5', '#F0F7FF']],
+  ['gulabi', 'Gulabi', ['#FCE1EA', '#BE185D', '#F5A3C0', '#FFF2F6']],
+  ['jamuni', 'Jamuni Lilac', ['#EBE1FC', '#6D28D9', '#C4B0F5', '#F7F2FF']],
+  ['chandan', 'Chandan', ['#F1E7D9', '#8B5E34', '#D9BE98', '#FBF7F1']],
 ];
 function applyTheme() {
   const th = S.profile.theme;
   const h = new Date().getHours();
   document.documentElement.setAttribute('data-theme', th === 'auto' ? (h >= 19 || h < 6 ? 'dark' : 'light') : th);
+  const OLD_PAL = { peach: 'kesar', mint: 'pudina', lavender: 'jamuni', sky: 'neela', blush: 'gulabi', lemon: 'chandan' };
+  if (OLD_PAL[S.profile.palette]) { S.profile = { ...S.profile, palette: OLD_PAL[S.profile.palette] }; store.set('profile', S.profile); }
   document.documentElement.setAttribute('data-palette', S.profile.palette || 'masala');
   document.documentElement.setAttribute('data-text', S.profile.textSize || 'normal');
   document.documentElement.setAttribute('data-motion', S.profile.motion || 'auto');
