@@ -1806,7 +1806,7 @@ function screenPlans() {
 // again on the server, which also confirms the email's domain really receives mail.
 function screenPartner() {
   view().innerHTML = `
-    <div class="res-hero" style="--vc:#5B2A86;padding-bottom:28px">
+    <div class="res-hero" style="--vc:var(--jamun);padding-bottom:28px">
       <img class="bg" src="${pic('market')}" alt="">
       <header class="bar"><a href="#/home" class="back" aria-label="Back">‹</a><span></span></header>
       <div class="res-title"><small>For brands</small><h1>${esc(t('partner'))}</h1><p style="opacity:.92">One clearly labelled sponsored card on the home and result screens. We only partner with brands that meet our health criteria, and sponsorship never changes a score.</p></div>

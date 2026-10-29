@@ -1155,3 +1155,23 @@ body { transition: background-color .4s ease, color .4s ease; }
 .site-foot { display: none; text-align: center; padding: 10px 16px 24px; color: var(--muted); font-size: 13px; }
 body.pre-login .site-foot { display: block; }
 .site-foot a { color: var(--jamun); font-weight: 700; }
+
+/* ---------- Soft colour wash instead of plain white (light mode) ----------
+   The page gets a pale tint plus three soft glows in the theme's own colours.
+   Cards are a touch tinted too, so nothing is stark white. Dark mode is unchanged. */
+:root[data-theme="light"] { --bg: #FBF7FF; --soft: #F2ECF8; --line: #E8E0F2; }
+:root[data-theme="light"][data-palette="mango"] { --bg: #FFF8F0; --soft: #FCEEDC; --line: #F4E0C8; }
+:root[data-theme="light"][data-palette="ocean"] { --bg: #F3F9FF; --soft: #E2EEFA; --line: #D2E3F4; }
+:root[data-theme="light"][data-palette="rose"]  { --bg: #FFF5F7; --soft: #FCE4EA; --line: #F4D2DB; }
+:root[data-theme="light"][data-palette="pista"] { --bg: #F4FBF6; --soft: #E0F2E7; --line: #CFE8D8; }
+:root[data-theme="light"][data-palette="neon"]  { --bg: #F9F5FF; --soft: #EEE6FB; --line: #E1D6F6; }
+:root[data-theme="light"] { --card: color-mix(in srgb, var(--bg) 45%, #ffffff); }
+:root[data-theme="light"] body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(60vmax 45vmax at 0% 0%, color-mix(in srgb, var(--haldi) 22%, transparent), transparent 70%),
+    radial-gradient(55vmax 45vmax at 100% 30%, color-mix(in srgb, var(--gulab) 16%, transparent), transparent 70%),
+    radial-gradient(60vmax 50vmax at 30% 100%, color-mix(in srgb, var(--pudina) 14%, transparent), transparent 70%);
+  background-attachment: fixed;
+}
+:root[data-theme="light"] .card, :root[data-theme="light"] .meal-card { border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
