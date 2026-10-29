@@ -2037,7 +2037,7 @@ async function sendChat(text) {
   CHAT.busy = true; renderChat();
   try {
     const cp = chatProduct();
-    const r = await fetch(API + '/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: S.profile.lang, product: cp ? cp.text : undefined, messages: CHAT.msgs.filter((m) => !m.error).slice(-12) }) });
+    const r = await fetch(API + '/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: S.profile.lang, product: cp ? cp.text : undefined, profile: { age: S.profile.age, diet: S.profile.diet, conditions: S.profile.conditions || [], allergens: S.profile.allergens || [] }, messages: CHAT.msgs.filter((m) => !m.error).slice(-12) }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) throw new Error(j.error || 'Bitu could not answer. Check your connection.');
     CHAT.msgs.push({ role: 'assistant', content: j.reply });

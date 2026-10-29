@@ -88,6 +88,9 @@ export function checkMessage(v) {
   if (s.length > 2000) return 'Please keep the message under 2000 characters.';
   const words = s.split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w));
   const uniq = new Set(words.map((w) => w.toLowerCase()));
+  const odd = (w) => looksRandom(w) || MASH.test(w) || /[a-z][A-Z]{2,}|[A-Z]{2,}[a-z]{2,}[A-Z]/.test(w) || /[bcdfghjklmnpqrstvwxz]{4,}/i.test(w.replace(/ngths?|tchs?|nchs?|rths?|ngst/gi, ''));
+  const oddCount = words.filter(odd).length;
+  if (oddCount > 1 || (words.length < 12 && oddCount >= 1 && oddCount / words.length > 0.12)) return 'Some words look like random letters. Please write a clear message about your brand.';
   if (words.length < 4 || uniq.size < Math.min(4, words.length) || words.filter((w) => MASH.test(w) || looksRandom(w)).length > words.length / 3 || looksRandom(s.replace(/\s/g, '').slice(0, 40)) && vowelRatio(s) < 0.2) return 'Please write a real message about your brand, in a few words.';
   return '';
 }
