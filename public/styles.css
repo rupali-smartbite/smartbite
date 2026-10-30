@@ -1221,3 +1221,17 @@ body.pre-login .site-foot { display: block; }
 :root[data-theme="light"] #view > section:is(:not([class]), .finder):nth-of-type(4n+3) { background: #EEE7FB; }
 :root[data-theme="light"] #view > section:is(:not([class]), .finder):nth-of-type(4n+4) { background: #E1EEFB; }
 :root[data-theme="light"] .card, :root[data-theme="light"] .meal-card { background: #FFFFFF; border: 0; box-shadow: 0 3px 14px rgba(120, 60, 20, .10); }
+
+/* ===== v34: light mode follows the chosen colour theme, clearly ===== */
+:root[data-theme="light"] {
+  --bg: color-mix(in srgb, var(--jamun) 11%, #ffffff);
+  --soft: color-mix(in srgb, var(--jamun) 19%, #ffffff);
+  --line: color-mix(in srgb, var(--jamun) 27%, #ffffff);
+  --card: #FFFFFF;
+}
+:root[data-theme="light"] body { background-image: radial-gradient(color-mix(in srgb, var(--jamun) 22%, transparent) 1.3px, transparent 1.5px); }
+:root[data-theme="light"] #view > section:is(:not([class]), .finder) { background: color-mix(in srgb, var(--jamun2) 16%, #ffffff); }
+:root[data-theme="light"] #view > section:is(:not([class]), .finder):nth-of-type(4n+2) { background: color-mix(in srgb, var(--haldi) 24%, #ffffff); }
+:root[data-theme="light"] #view > section:is(:not([class]), .finder):nth-of-type(4n+3) { background: color-mix(in srgb, var(--kesar) 15%, #ffffff); }
+:root[data-theme="light"] #view > section:is(:not([class]), .finder):nth-of-type(4n+4) { background: color-mix(in srgb, var(--neel) 15%, #ffffff); }
+:root[data-theme="light"] .card, :root[data-theme="light"] .meal-card { box-shadow: 0 3px 14px color-mix(in srgb, var(--jamun) 16%, transparent); }

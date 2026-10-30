@@ -869,6 +869,11 @@ const EXTRA_DISHES = [
   { name: 'Bhel puri', img: '/img/dishes/bhel-puri.jpg', d: 'veg', to: 'Sprouts chaat', why: 'Sprouts add protein and fibre. Go easy on the sev and sweet chutney.' },
   { name: 'Fried momos', img: '/img/dishes/fried-momos.jpg', d: 'veg', to: 'Steamed dhokla', why: 'Fried momos soak up oil. Steamed snacks like dhokla, or steamed momos, are much lighter.' },
   { name: 'Chole kulche', img: '/img/dishes/chole-kulche.jpg', d: 'veg', to: 'Chana masala with roti', why: 'Keep the chole, and swap the buttered maida kulcha for a whole-wheat roti.' },
+  { name: 'Rasmalai', img: 120, slot: 'sweets', d: 'veg', to: 'Plain dahi with fruit', why: 'Rasmalai is chhena soaked in sweetened, thickened milk. Dahi with fresh fruit keeps the creamy milk taste with far less sugar.' },
+  { name: 'Kheer', img: 120, slot: 'sweets', d: 'veg', to: 'Plain dahi with fruit', why: 'Kheer is cooked with lots of sugar. Curd with fruit is creamy and naturally sweet.' },
+  { name: 'Gajar halwa', img: 114, slot: 'sweets', d: 'veg', to: 'Dates and dry fruits', why: 'Halwa is cooked in ghee and sugar. Dates and nuts give sweetness with fibre.' },
+  { name: 'Besan ladoo', img: 114, slot: 'sweets', d: 'veg', to: 'Dates and dry fruits', why: 'Ladoos are mostly ghee and sugar. Two or three dates satisfy the craving with fibre.' },
+  { name: 'Shrikhand', img: 120, slot: 'sweets', d: 'veg', to: 'Plain dahi with fruit', why: 'Shrikhand is hung curd with a lot of sugar. Keep the curd, sweeten it with fruit instead.' },
   { name: 'Chicken 65', img: '/img/dishes/chicken-65.jpg', d: 'nonveg', to: 'Chicken hariyali kebab', why: 'Chicken 65 is deep-fried with added colour. Kebabs are marinated in mint and grilled.' },
 ];
 const fImg = (x) => (typeof x === 'string' ? x : mealImg(x));
@@ -881,7 +886,7 @@ function finderData() {
     dishes.push({ name: m.from, img: m.fi, slot, d: m.d === 'veg' ? dietOf(m.from) : m.d, fam: famOf(m.from), to: m.to, why: m.why });
     addAlt(m.to, m.ti, slot);
   }
-  EXTRA_DISHES.forEach((x) => dishes.push({ name: x.name, img: x.img, slot: 'street', d: x.d, fam: x.fam || famOf(x.name), to: x.to, why: x.why }));
+  EXTRA_DISHES.forEach((x) => dishes.push({ name: x.name, img: x.img, slot: x.slot || 'street', d: x.d, fam: x.fam || famOf(x.name), to: x.to, why: x.why }));
   SWAP_IDEAS.forEach((x, i) => {
     if (!dishes.some((d) => d.name.toLowerCase() === x.from.toLowerCase())) dishes.push({ name: x.from, img: 100 + i * 2, slot: x.cat, d: 'veg', fam: famOf(x.from), to: x.to, why: x.why });
     addAlt(x.to, 101 + i * 2, x.cat);
@@ -935,7 +940,8 @@ function wireFinder() {
   const open = () => {
     const q = inp.value.trim().toLowerCase();
     const { dishes } = finderData();
-    shown = dishes.filter((d) => dietAllows(d.d) && (!q || d.name.toLowerCase().includes(q) || q.split(/\s+/).every((w) => d.name.toLowerCase().includes(w)))).slice(0, 60);
+    const sq = (t) => t.toLowerCase().replace(/[^a-z]/g, ''); const qs = sq(q);
+    shown = dishes.filter((d) => dietAllows(d.d) && (!q || d.name.toLowerCase().includes(q) || sq(d.name).includes(qs) || q.split(/\s+/).every((w) => d.name.toLowerCase().includes(w)))).slice(0, 60);
     active = -1;
     lb.innerHTML = shown.length ? shown.map((d, i) => `<li role="option" id="fo-${i}" data-fi="${i}" aria-selected="false"><img src="${fImg(d.img)}" alt="" loading="lazy">${dietMark(d.d)}<span>${esc(d.name)}</span></li>`).join('')
       : '<li class="none" role="option" aria-disabled="true">No match yet. Try "chicken", "paneer", "samosa" or "pizza".</li>';
