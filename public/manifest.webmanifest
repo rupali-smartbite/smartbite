@@ -9,7 +9,7 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FFF3E2",
+  "background_color": "#F4EDF9",
   "theme_color": "#5B2A86",
   "categories": ["health", "food", "education", "lifestyle"],
   "icons": [
