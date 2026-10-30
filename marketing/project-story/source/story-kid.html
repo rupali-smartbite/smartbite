@@ -1,0 +1,352 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Baloo;src:url(fonts/Baloo2.ttf);font-weight:400 800}
+:root{--deep:#241034;--jamun:#5B2A86;--jamun2:#8E3FC9;--haldi:#FFB703;--kesar:#FB8500;--mirchi:#E63946;--pudina:#1FA463;--cream:#FFF6EA;--sand:#F6E7D2;--ink:#241034;--muted:#6B5A78}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#777;padding:20px;display:flex;flex-direction:column;gap:30px;align-items:flex-start;font-family:Poppins,sans-serif;color:var(--ink)}
+.piece{position:relative;overflow:hidden;background:var(--cream)}
+h1,h2,h3,.num,.kicker,.logo{font-family:Baloo,Poppins,sans-serif}
+.logo{display:flex;align-items:center;gap:.35em;font-weight:800;letter-spacing:-.01em}
+.logo img{width:1.3em;height:1.3em;border-radius:.3em}
+.kicker{font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.phone{position:absolute;border-radius:58px;background:#120A1A;padding:13px;box-shadow:0 40px 80px -20px rgba(36,16,52,.55),0 0 0 2px #2b1d38 inset}
+.phone .scr{width:100%;height:100%;border-radius:46px;overflow:hidden;background:#fff}
+.phone .scr img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.phone::before{content:"";position:absolute;top:24px;left:50%;transform:translateX(-50%);width:28%;height:26px;border-radius:20px;background:#120A1A;z-index:2}
+.qr{background:#fff;border-radius:22px;padding:14px;text-align:center;box-shadow:0 12px 30px -10px rgba(36,16,52,.35)}
+.qr img{display:block;width:100%;aspect-ratio:1;image-rendering:pixelated}
+.qr b{display:block;font-weight:700;margin-top:6px;line-height:1.2}
+.qr i{display:inline-block;font-style:normal;font-weight:700;font-size:.72em;letter-spacing:.08em;color:#fff;border-radius:999px;padding:.25em .8em;margin-bottom:8px}
+.qa{background:var(--pudina)}.qb{background:var(--kesar)}
+.dotgrid{background-image:radial-gradient(rgba(91,42,134,.12) 1.4px,transparent 1.6px);background-size:24px 24px}
+.pill{display:inline-flex;align-items:center;gap:.4em;border-radius:999px;font-weight:600}
+.stat .num{font-weight:800;line-height:.9;letter-spacing:-.03em}
+.stat p{line-height:1.3}
+.footer{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:28px}
+.blob{position:absolute;border-radius:50%;filter:blur(2px)}
+
+/* ===== BANNER 1800x900 ===== */
+#banner{width:1800px;height:900px;background:var(--deep);color:#fff}
+#banner .glow1{left:-200px;top:-260px;width:820px;height:820px;background:radial-gradient(circle,rgba(142,63,201,.55),transparent 65%)}
+#banner .glow2{right:-160px;bottom:-300px;width:900px;height:900px;background:radial-gradient(circle,rgba(251,133,0,.35),transparent 65%)}
+#banner .left{position:absolute;left:70px;top:58px;width:900px}
+#banner h1{font-size:96px;line-height:.95;font-weight:800;letter-spacing:-.03em;margin:26px 0 18px}
+#banner h1 em{font-style:normal;color:var(--haldi)}
+#banner .sub{font-size:25px;line-height:1.45;color:#E8DBF4;max-width:820px}
+#banner .flow{display:flex;gap:14px;margin-top:34px}
+#banner .step{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:18px 18px 16px}
+#banner .step .n{font-family:Baloo;font-weight:800;font-size:15px;letter-spacing:.14em;color:var(--haldi)}
+#banner .step b{display:block;font-family:Baloo;font-size:27px;line-height:1.05;margin:6px 0 6px}
+#banner .step p{font-size:15.5px;line-height:1.35;color:#D9C8EA}
+#banner .stats{position:absolute;left:70px;bottom:56px;display:flex;gap:40px}
+#banner .stat .num{font-size:58px;color:#fff}
+#banner .stat .num small{font-size:.5em;color:var(--haldi)}
+#banner .stat p{font-size:15px;color:#CDB6E3;margin-top:4px}
+#banner .qrs{position:absolute;right:60px;bottom:56px;display:flex;gap:18px}
+#banner .qrs .qr{width:178px;color:var(--ink);font-size:17px;padding:12px}
+
+/* ===== POSTERS 1240x1754 ===== */
+.poster{width:1240px;height:1754px}
+.poster .head{position:absolute;left:80px;right:80px;top:70px}
+.poster .head .row{display:flex;justify-content:space-between;align-items:center}
+.poster .head .logo{font-size:38px;color:var(--jamun)}
+.poster .chap{font-family:Baloo;font-weight:800;font-size:26px;letter-spacing:.14em;color:var(--kesar)}
+.poster h1{font-size:118px;line-height:.92;font-weight:800;letter-spacing:-.035em;margin-top:44px;color:var(--deep)}
+.poster h1 em{font-style:normal;color:var(--jamun2)}
+.poster .lead{font-size:31px;line-height:1.42;color:var(--muted);margin-top:26px;max-width:960px}
+.poster .footer{padding:0 80px 64px}
+.poster .footer .qr{width:190px;font-size:18px;padding:12px}
+.poster .footer .msg{flex:1}
+.poster .footer .msg b{display:block;font-family:Baloo;font-size:40px;line-height:1.05;color:var(--deep)}
+.poster .footer .msg span{font-size:21px;color:var(--muted)}
+.band{position:absolute;left:0;right:0;bottom:0;height:300px;background:var(--sand);border-radius:60px 60px 0 0}
+
+/* P1 problem */
+#p1 .big{position:absolute;left:80px;top:560px;width:1080px;height:640px;border-radius:44px;background:var(--deep);color:#fff;overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
+#p1 .big .side{padding:50px 48px}
+#p1 .big .side + .side{border-left:1px solid rgba(255,255,255,.14)}
+#p1 .big .k{font-family:Baloo;font-weight:800;letter-spacing:.12em;font-size:20px;color:var(--haldi)}
+#p1 .big .num{font-family:Baloo;font-weight:800;font-size:150px;line-height:.85;letter-spacing:-.04em;margin:22px 0 8px}
+#p1 .big .num small{font-size:.38em;letter-spacing:0}
+#p1 .big h3{font-size:34px;line-height:1.1;margin-bottom:12px}
+#p1 .big p{font-size:21px;line-height:1.45;color:#D9C8EA}
+#p1 .spoons{display:flex;gap:10px;margin:22px 0 4px;font-size:44px}
+#p1 .meter{height:22px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;margin:26px 0 10px}
+#p1 .meter i{display:block;height:100%;width:33%;background:linear-gradient(90deg,var(--haldi),var(--kesar))}
+#p1 .facts{position:absolute;left:80px;right:80px;top:1240px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+#p1 .facts div{background:#fff;border-radius:28px;padding:24px 26px;font-size:20px;line-height:1.4;color:var(--muted);box-shadow:0 10px 30px -18px rgba(36,16,52,.35)}
+#p1 .facts b{display:block;font-family:Baloo;font-size:28px;color:var(--deep);line-height:1.1;margin-bottom:6px}
+
+/* P2 how */
+#p2 .steps{position:absolute;left:80px;right:80px;top:520px;display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+#p2 .st{position:relative;height:790px}
+#p2 .st .tag{display:flex;align-items:center;gap:12px;font-family:Baloo;font-weight:800;font-size:34px;color:var(--deep)}
+#p2 .st .tag i{font-style:normal;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:28px}
+#p2 .st p{font-size:20px;line-height:1.4;color:var(--muted);margin-top:10px;height:84px}
+#p2 .st .phone{left:14px;right:14px;top:160px;height:610px;border-radius:50px;padding:11px}
+#p2 .st .phone .scr{border-radius:40px}
+#p2 .score{position:absolute;left:80px;right:80px;top:1180px;background:#fff;border-radius:36px;padding:30px 36px;display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:30px;box-shadow:0 14px 40px -20px rgba(36,16,52,.35)}
+#p2 .score h3{font-size:30px;line-height:1.1;color:var(--deep)}
+#p2 .score p{font-size:18.5px;line-height:1.45;color:var(--muted);margin-top:8px}
+#p2 .score ul{list-style:none;font-size:19px;line-height:1.75;font-weight:600}
+#p2 .score ul.minus li::before{content:"+ ";color:var(--mirchi);font-weight:800}
+#p2 .score ul.plus li::before{content:"− ";color:var(--pudina);font-weight:800}
+#p2 .score .k{font-family:Baloo;font-weight:800;letter-spacing:.1em;font-size:16px;margin-bottom:4px}
+
+/* P3 features */
+#p3 .grid{position:absolute;left:80px;right:80px;top:500px;display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+#p3 .f{background:#fff;border-radius:30px;padding:26px 28px;display:flex;gap:22px;align-items:flex-start;box-shadow:0 10px 30px -18px rgba(36,16,52,.35);min-height:168px}
+#p3 .f .ic{flex:none;width:76px;height:76px;border-radius:22px;display:grid;place-items:center;font-size:40px}
+#p3 .f b{display:block;font-family:Baloo;font-size:30px;line-height:1.05;color:var(--deep)}
+#p3 .f span{display:block;font-size:19px;line-height:1.4;color:var(--muted);margin-top:6px}
+#p3 .dishes{position:absolute;left:80px;right:80px;top:1250px;height:150px;display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+#p3 .dishes figure{border-radius:22px;overflow:hidden;position:relative}
+#p3 .dishes img{width:100%;height:100%;object-fit:cover;display:block}
+#p3 .dishes figcaption{position:absolute;left:8px;bottom:8px;background:rgba(36,16,52,.82);color:#fff;font-size:14px;font-weight:600;padding:3px 10px;border-radius:999px}
+
+/* P4 tech */
+#p4{background:var(--deep);color:#fff}
+#p4 .head .logo{color:#fff}
+#p4 h1{color:#fff}#p4 h1 em{color:var(--haldi)}
+#p4 .lead{color:#D9C8EA}
+#p4 .arch{position:absolute;left:80px;right:80px;top:560px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+#p4 .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:30px;padding:28px 30px}
+#p4 .card .k{font-family:Baloo;font-weight:800;letter-spacing:.12em;font-size:17px;color:var(--haldi)}
+#p4 .card b{display:block;font-family:Baloo;font-size:31px;line-height:1.08;margin:8px 0 8px}
+#p4 .card p{font-size:18.5px;line-height:1.45;color:#D9C8EA}
+#p4 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#p4 .chips span{font-size:15px;font-weight:600;border-radius:999px;padding:5px 12px;background:rgba(255,183,3,.14);color:#FFD77A}
+#p4 .band{background:#fff}
+#p4 .footer .msg b{color:var(--deep)}
+</style>
+<style>
+/* ======== KID MODE ======== */
+body.kid{--ink:#241034}
+body.kid .piece{background:#FFF4D6;background-image:radial-gradient(rgba(251,133,0,.22) 2.2px,transparent 2.6px);background-size:30px 30px}
+body.kid #p1{background-color:#FFE6EE;background-image:radial-gradient(rgba(255,93,143,.25) 2.2px,transparent 2.6px)}
+body.kid #p2{background-color:#E3F6FF;background-image:radial-gradient(rgba(59,167,240,.25) 2.2px,transparent 2.6px)}
+body.kid #p3{background-color:#E6F8EC;background-image:radial-gradient(rgba(31,164,99,.25) 2.2px,transparent 2.6px)}
+body.kid #p4{background-color:#5B2A86;background-image:radial-gradient(rgba(255,255,255,.12) 2.2px,transparent 2.6px)}
+body.kid #banner{background-color:#FFC93C;background-image:radial-gradient(rgba(251,133,0,.35) 2.4px,transparent 2.8px);color:var(--ink)}
+body.kid #banner .blob{display:none}
+body.kid h1{text-shadow:5px 5px 0 #fff, 9px 9px 0 rgba(36,16,52,.18)}
+body.kid #banner h1{color:var(--ink);text-shadow:5px 5px 0 #fff}
+body.kid #banner h1 em{color:#E63946}
+body.kid .poster h1 em{color:#FF5D8F}
+body.kid #p2 h1 em{color:#1E8FE0}
+body.kid #p3 h1 em{color:#1FA463}
+body.kid #p4 h1{color:#fff;text-shadow:5px 5px 0 #241034}
+body.kid #p4 h1 em{color:#FFC93C}
+body.kid #banner .sub{color:#3d2a4a;font-weight:500}
+body.kid #banner .logo span{color:#5B2A86!important}
+body.kid #banner .step{background:#fff;border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);border-radius:26px}
+body.kid #banner .step:nth-child(odd){transform:rotate(-1.5deg)} body.kid #banner .step:nth-child(even){transform:rotate(1.5deg)}
+body.kid #banner .step .n{color:#FB8500}
+body.kid #banner .step b{color:var(--ink)} body.kid #banner .step p{color:#6B5A78}
+body.kid #banner .stat .num{color:var(--ink);text-shadow:4px 4px 0 #fff}
+body.kid #banner .stat .num small{color:#E63946}
+body.kid #banner .stat p{color:#3d2a4a;font-weight:600}
+body.kid .qr{border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+body.kid .qr:first-child,body.kid .footer .qr:nth-of-type(1){transform:rotate(-2deg)}
+body.kid .phone{border:4px solid var(--ink);box-shadow:10px 10px 0 var(--ink)}
+body.kid .phone::after{content:"";position:absolute;top:-18px;left:50%;width:120px;height:38px;transform:translateX(-50%) rotate(-4deg);background:rgba(255,201,60,.85);border:2px dashed rgba(36,16,52,.25);z-index:3}
+body.kid .band{background:#fff;border-top:5px solid var(--ink);border-radius:70px 70px 0 0}
+body.kid .chap{background:#fff;border:3px solid var(--ink);border-radius:999px;padding:4px 16px;box-shadow:4px 4px 0 var(--ink);color:#FB8500}
+body.kid #p1 .big{background:#fff;color:var(--ink);border:5px solid var(--ink);box-shadow:10px 10px 0 var(--ink)}
+body.kid #p1 .big .side + .side{border-left:4px dashed #FFB3C8}
+body.kid #p1 .big .k{color:#E63946}
+body.kid #p1 .big p{color:#6B5A78}
+body.kid #p1 .meter{background:#FFE6EE;border:3px solid var(--ink)}
+body.kid #p1 .facts div,body.kid #p3 .f,body.kid #p2 .score{border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+body.kid #p1 .facts div:nth-child(2){transform:rotate(1.5deg)} body.kid #p1 .facts div:nth-child(1){transform:rotate(-1.2deg)}
+body.kid #p3 .f:nth-child(4n+1){transform:rotate(-1deg)} body.kid #p3 .f:nth-child(4n+2){transform:rotate(1deg)} body.kid #p3 .f:nth-child(4n+3){transform:rotate(.8deg)} body.kid #p3 .f:nth-child(4n){transform:rotate(-.8deg)}
+body.kid #p3 .f .ic{border:3px solid var(--ink)}
+body.kid #p3 .dishes figure{border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink)}
+body.kid #p3 .dishes figure:nth-child(odd){transform:rotate(-2deg)} body.kid #p3 .dishes figure:nth-child(even){transform:rotate(2deg)}
+body.kid #p2 .st .tag i{border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+body.kid #p2 .st:nth-child(1) .phone{transform:rotate(-2.5deg)} body.kid #p2 .st:nth-child(3) .phone{transform:rotate(2.5deg)}
+body.kid #p4 .card{background:#fff;border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+body.kid #p4 .card:nth-child(odd){transform:rotate(-1deg)} body.kid #p4 .card:nth-child(even){transform:rotate(1deg)}
+body.kid #p4 .card b{color:var(--ink)} body.kid #p4 .card p{color:#6B5A78}
+body.kid #p4 .card .k{color:#FB8500}
+body.kid #p4 .chips span{background:#FFF0CC;color:#7a4b00;border:2px solid var(--ink)}
+body.kid #p4 .lead{color:#F0E3FA}
+body.kid #p4 .head .logo{color:#fff}
+body.kid .head .logo img,body.kid #banner .logo img{border:3px solid var(--ink)}
+/* doodles */
+.dd{position:absolute;z-index:7;pointer-events:none;line-height:1}
+.dd.em{filter:drop-shadow(3px 3px 0 rgba(36,16,52,.9))}
+.dd svg{display:block;overflow:visible}
+.kidbubble{position:absolute;z-index:8;background:#fff;border:4px solid var(--ink);border-radius:30px;padding:10px 18px;font-family:Baloo;font-weight:800;box-shadow:5px 5px 0 var(--ink);line-height:1.05;text-align:center}
+.kidbubble::after{content:"";position:absolute;bottom:-22px;left:30px;width:30px;height:24px;background:var(--ink);clip-path:polygon(0 0,100% 0,10% 100%)}
+.kidbubble::before{content:"";position:absolute;bottom:-14px;left:34px;width:20px;height:16px;background:#fff;clip-path:polygon(0 0,100% 0,8% 100%);z-index:1}
+</style></head><body>
+
+<!-- ================= BANNER ================= -->
+<section class="piece" id="banner">
+  <div class="blob glow1"></div><div class="blob glow2"></div>
+  <div class="left">
+    <div class="logo" style="font-size:40px"><img src="logo.svg" alt="">SmartBite <span style="font-weight:600;font-size:.5em;color:#CDB6E3;letter-spacing:.1em;margin-left:10px">ATAL TINKERING LAB PROJECT</span></div>
+    <h1>Know what's <em>really</em><br>in your food.</h1>
+    <p class="sub">An AI food health scanner made for Indian families. Scan any packet, barcode or thali and get an honest verdict for adults and kids, plus a tasty desi swap.</p>
+    <div class="flow">
+      <div class="step"><span class="n">01 · PROBLEM</span><b>Labels hide sugar &amp; salt</b><p>Tiny print, per 100 g, hard to read.</p></div>
+      <div class="step"><span class="n">02 · SCAN</span><b>Barcode, packet or plate</b><p>Point your phone. Done in 5 seconds.</p></div>
+      <div class="step"><span class="n">03 · VERDICT</span><b>Adults and kids, separately</b><p>Clear score with the reasons.</p></div>
+      <div class="step"><span class="n">04 · SWAP</span><b>A healthier desi pick</b><p>Plus Bitu, our AI food buddy.</p></div>
+    </div>
+  </div>
+  <div class="phone" style="left:1060px;top:56px;width:262px;height:560px;transform:rotate(-4deg)"><div class="scr"><img src="screens/result2.png" alt=""></div></div>
+  <div class="phone" style="left:1380px;top:34px;width:262px;height:560px;transform:rotate(3deg)"><div class="scr"><img src="screens/bitu.png" alt=""></div></div>
+  <div class="stats">
+    <div class="stat"><div class="num">83</div><p>products in our<br>own database</p></div>
+    <div class="stat"><div class="num">45</div><p>Indian brands<br>verified by hand</p></div>
+    <div class="stat"><div class="num">70<small>+</small></div><p>desi dishes<br>with swaps</p></div>
+    <div class="stat"><div class="num">3</div><p>languages: English,<br>हिन्दी, मराठी</p></div>
+  </div>
+  <div class="qrs">
+    <div class="qr"><i class="qa">ANDROID APP</i><img src="qr-app.png" alt=""><b>Get the app</b></div>
+    <div class="qr"><i class="qb">REVIEW</i><img src="qr-review.png" alt=""><b>Rate us</b></div>
+  </div>
+</section>
+
+<!-- ================= P1 PROBLEM ================= -->
+<section class="piece poster dotgrid" id="p1">
+  <div class="head">
+    <div class="row"><div class="logo"><img src="logo.svg" alt="">SmartBite</div><span class="chap">01 / THE PROBLEM</span></div>
+    <h1>A small packet.<br><em>A big secret.</em></h1>
+    <p class="lead">Packaged snacks and drinks are everywhere in Indian tiffins and evenings. The truth about them is hidden in tiny print, per 100 g, that almost nobody reads.</p>
+  </div>
+  <div class="big">
+    <div class="side">
+      <span class="k">ONE 250 ML LEMON-LIME SODA</span>
+      <div class="num">24.5<small> g</small></div>
+      <h3>of sugar. That's about 6 teaspoons.</h3>
+      <div class="spoons">🥄🥄🥄🥄🥄🥄</div>
+      <p>Almost an adult's whole daily limit for added sugar, in a few sips.</p>
+    </div>
+    <div class="side">
+      <span class="k">ONE SMALL PACKET OF CHIPS</span>
+      <div class="num">⅓</div>
+      <h3>of a child's daily salt.</h3>
+      <div class="meter"><i></i></div>
+      <p>Before lunch, dinner or any other snack of the day. Kids' bodies need far less salt than adults'.</p>
+    </div>
+  </div>
+  <div class="facts">
+    <div><b>Hard to read</b>Labels show values per 100 g, not per packet, so the real amount is hidden.</div>
+    <div><b>Made for adults</b>Daily limits on packs are for grown-ups. Kids need their own verdict.</div>
+    <div><b>No desi answer</b>Even when we know it's junk, what should we eat instead?</div>
+  </div>
+  <div class="band"></div>
+  <div class="footer">
+    <div class="msg"><b>So we built SmartBite.</b><span>Scan before you snack. Free for every family.</span></div>
+    <div class="qr"><i class="qa">ANDROID APP</i><img src="qr-app.png" alt=""><b>Get the app</b></div>
+    <div class="qr"><i class="qb">REVIEW</i><img src="qr-review.png" alt=""><b>Rate us</b></div>
+  </div>
+</section>
+
+<!-- ================= P2 HOW ================= -->
+<section class="piece poster dotgrid" id="p2">
+  <div class="head">
+    <div class="row"><div class="logo"><img src="logo.svg" alt="">SmartBite</div><span class="chap">02 / HOW IT WORKS</span></div>
+    <h1>Scan. Know.<br><em>Eat smart.</em></h1>
+  </div>
+  <div class="steps">
+    <div class="st"><div class="tag"><i style="background:var(--kesar)">1</i>Scan</div><p>Barcode, a photo of the packet, or a photo of your thali.</p><div class="phone"><div class="scr"><img src="screens/home.png" alt=""></div></div></div>
+    <div class="st"><div class="tag"><i style="background:var(--mirchi)">2</i>Know</div><p>A clear verdict for adults and for kids, with the reasons.</p><div class="phone"><div class="scr"><img src="screens/result2.png" alt=""></div></div></div>
+    <div class="st"><div class="tag"><i style="background:var(--pudina)">3</i>Swap</div><p>Ask Bitu for a healthier desi pick in your language.</p><div class="phone"><div class="scr"><img src="screens/bitu.png" alt=""></div></div></div>
+  </div>
+  <div class="score">
+    <div><h3>How the score works</h3><p>We read the nutrition label and ingredients, compare them with daily limits for that age, and turn it into one simple score.</p></div>
+    <div><div class="k" style="color:var(--mirchi)">ADDS JUNK POINTS</div><ul class="minus"><li>Sugar</li><li>Salt</li><li>Saturated fat</li><li>Ultra-processing &amp; additives</li></ul></div>
+    <div><div class="k" style="color:var(--pudina)">TAKES THEM OFF</div><ul class="plus"><li>Fibre</li><li>Protein</li><li>Whole, fresh ingredients</li></ul></div>
+  </div>
+  <div class="band"></div>
+  <div class="footer">
+    <div class="msg"><b>Try it on your next snack.</b><span>Works on any phone. The Android app is free.</span></div>
+    <div class="qr"><i class="qa">ANDROID APP</i><img src="qr-app.png" alt=""><b>Get the app</b></div>
+    <div class="qr"><i class="qb">REVIEW</i><img src="qr-review.png" alt=""><b>Rate us</b></div>
+  </div>
+</section>
+
+<!-- ================= P3 FEATURES ================= -->
+<section class="piece poster dotgrid" id="p3">
+  <div class="head">
+    <div class="row"><div class="logo"><img src="logo.svg" alt="">SmartBite</div><span class="chap">03 / WHAT IT DOES</span></div>
+    <h1>Everything a <em>family</em><br>needs to eat smarter.</h1>
+  </div>
+  <div class="grid">
+    <div class="f"><div class="ic" style="background:#FFF0CC">📦</div><div><b>Barcode &amp; packet scan</b><span>Our verified Indian database first, then millions of products from Open Food Facts.</span></div></div>
+    <div class="f"><div class="ic" style="background:#FFE3E3">🍛</div><div><b>Thali &amp; street food</b><span>Snap a plate. AI estimates calories, salt, sugar and fat.</span></div></div>
+    <div class="f"><div class="ic" style="background:#E7F7EE">👨‍👩‍👧</div><div><b>Adult and kid verdicts</b><span>Separate scores, because kids need lower limits.</span></div></div>
+    <div class="f"><div class="ic" style="background:#EEE6FA">🔄</div><div><b>70+ desi swaps</b><span>From vada pav to rasmalai: a healthier pick for every dish.</span></div></div>
+    <div class="f"><div class="ic" style="background:#E3EEFC">💬</div><div><b>Ask Bitu</b><span>AI food buddy that answers in English, हिन्दी and मराठी.</span></div></div>
+    <div class="f"><div class="ic" style="background:#FFE9D6">⚠️</div><div><b>Allergen &amp; additive alerts</b><span>Flags 7 common allergens and explains 25 E-numbers.</span></div></div>
+    <div class="f"><div class="ic" style="background:#E7F7EE">📊</div><div><b>Daily tracker</b><span>Track sugar, salt and calories, and build healthy streaks.</span></div></div>
+    <div class="f"><div class="ic" style="background:#FFF0CC">🎮</div><div><b>Games &amp; quizzes</b><span>Kids learn to spot hidden sugar while they play.</span></div></div>
+  </div>
+  <div class="dishes">
+    <figure><img src="misal-pav.jpg" alt=""><figcaption>Misal pav</figcaption></figure>
+    <figure><img src="dabeli.jpg" alt=""><figcaption>Dabeli</figcaption></figure>
+    <figure><img src="bhel-puri.jpg" alt=""><figcaption>Bhel puri</figcaption></figure>
+    <figure><img src="chole-kulche.jpg" alt=""><figcaption>Chole kulche</figcaption></figure>
+    <figure><img src="fried-momos.jpg" alt=""><figcaption>Fried momos</figcaption></figure>
+    <figure><img src="chicken-65.jpg" alt=""><figcaption>Chicken 65</figcaption></figure>
+  </div>
+  <div class="band"></div>
+  <div class="footer">
+    <div class="msg"><b>Made for Indian food.</b><span>Veg, Jain, egg and non-veg. Free to use.</span></div>
+    <div class="qr"><i class="qa">ANDROID APP</i><img src="qr-app.png" alt=""><b>Get the app</b></div>
+    <div class="qr"><i class="qb">REVIEW</i><img src="qr-review.png" alt=""><b>Rate us</b></div>
+  </div>
+</section>
+
+<!-- ================= P4 TECH ================= -->
+<section class="piece poster" id="p4">
+  <div class="blob" style="left:-260px;top:-260px;width:900px;height:900px;background:radial-gradient(circle,rgba(142,63,201,.5),transparent 65%)"></div>
+  <div class="head">
+    <div class="row"><div class="logo"><img src="logo.svg" alt="">SmartBite</div><span class="chap">04 / UNDER THE HOOD</span></div>
+    <h1>Built by students.<br><em>Built properly.</em></h1>
+    <p class="lead">An Atal Tinkering Lab project: a real, working app with its own database, AI and security.</p>
+  </div>
+  <div class="arch">
+    <div class="card"><span class="k">FRONT END</span><b>Fast single-page app</b><p>Works in any phone browser and installs as an Android app.</p><div class="chips"><span>HTML</span><span>CSS</span><span>JavaScript</span><span>PWA</span></div></div>
+    <div class="card"><span class="k">BACK END</span><b>Serverless functions</b><p>Product lookup, AI scans, Bitu chat, reviews and partner enquiries.</p><div class="chips"><span>Node.js</span><span>Netlify Functions</span><span>Netlify Blobs</span></div></div>
+    <div class="card"><span class="k">AI</span><b>Reads labels &amp; plates</b><p>Claude AI reads packet photos, estimates thalis and powers Bitu, grounded in our verified data.</p><div class="chips"><span>Claude AI</span><span>Vision</span><span>3 languages</span></div></div>
+    <div class="card"><span class="k">DATA</span><b>Indian food first</b><p>83 products in our own database, 45 Indian brands checked by hand, plus Open Food Facts.</p><div class="chips"><span>Verified India DB</span><span>Open Food Facts</span></div></div>
+    <div class="card"><span class="k">SCORING</span><b>Same food, same verdict</b><p>Rules for sugar, salt, fat, processing, fibre and protein, with separate limits for kids.</p><div class="chips"><span>Adult score</span><span>Kid score</span><span>Junk meter</span></div></div>
+    <div class="card"><span class="k">SECURITY</span><b>Safe by design</b><p>Strict content security, rate limits and input checks. Profiles stay on your own phone.</p><div class="chips"><span>CSP</span><span>Rate limits</span><span>Validation</span></div></div>
+  </div>
+  <div class="band"></div>
+  <div class="footer">
+    <div class="msg"><b>Try it. Then tell us.</b><span>Your review helps us make SmartBite better.</span></div>
+    <div class="qr"><i class="qa">ANDROID APP</i><img src="qr-app.png" alt=""><b>Get the app</b></div>
+    <div class="qr"><i class="qb">REVIEW</i><img src="qr-review.png" alt=""><b>Rate us</b></div>
+  </div>
+</section>
+<script>
+document.body.classList.add('kid');
+const star=(c,s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><path d="M50 4 61 37 96 38 68 59 78 94 50 73 22 94 32 59 4 38 39 37Z" fill="${c}" stroke="#241034" stroke-width="6" stroke-linejoin="round"/></svg>`;
+const squig=(c,w)=>`<svg width="${w}" height="${w/4}" viewBox="0 0 200 50"><path d="M5 25 Q 30 0 55 25 T 105 25 T 155 25 T 195 25" fill="none" stroke="${c}" stroke-width="10" stroke-linecap="round"/></svg>`;
+const spark=(c,s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><path d="M50 0 C55 40 60 45 100 50 C60 55 55 60 50 100 C45 60 40 55 0 50 C40 45 45 40 50 0Z" fill="${c}" stroke="#241034" stroke-width="5"/></svg>`;
+const add=(id,html)=>document.getElementById(id).insertAdjacentHTML('beforeend',html);
+const D=(x,y,inner,cls='')=>`<div class="dd ${cls}" style="left:${x}px;top:${y}px">${inner}</div>`;
+// banner
+add('banner', D(930,30,star('#FF5D8F',70))+D(985,110,spark('#fff',40))+D(1660,600,star('#1FA463',60))+D(640,760,squig('#FF5D8F',160))+D(20,820,spark('#fff',36))
+ +D(1010,560,'<span style="font-size:64px">🍎</span>','em')+D(1690,40,'<span style="font-size:60px">🥕</span>','em')+D(1700,320,'<span style="font-size:56px">🍌</span>','em')
+ +`<div class="kidbubble" style="left:1240px;top:640px;font-size:24px;transform:rotate(-3deg)">Scan me! 📱</div>`);
+// p1
+add('p1', D(1080,150,star('#FFC93C',80))+D(1150,260,spark('#fff',40))+D(960,1395,'<span style="font-size:64px">🍟</span>','em')+D(1060,1390,'<span style="font-size:70px">🥤</span>','em')
+ +`<div class="kidbubble" style="left:740px;top:290px;font-size:30px;transform:rotate(3deg)">Whoa! 😲</div>`);
+// p2
+add('p2', D(1090,150,star('#FF5D8F',80))+D(1150,260,spark('#FFC93C',44))+D(1100,1080,'<span style="font-size:64px">✨</span>','em')
+ +`<div class="kidbubble" style="left:820px;top:270px;font-size:30px;transform:rotate(-3deg)">Super easy! 🙌</div>`);
+// p3
+add('p3', D(30,400,star('#FFC93C',64))+D(1110,1395,'<span style="font-size:64px">🥭</span>','em')+D(990,1400,'<span style="font-size:58px">🥕</span>','em')
+ +`<div class="kidbubble" style="left:820px;top:398px;font-size:28px;transform:rotate(2deg)">Yummy &amp; healthy! 😋</div>`);
+// p4
+add('p4', D(1110,140,star('#FFC93C',80))+D(1165,250,spark('#fff',40))+D(1100,1330,'<span style="font-size:70px">🚀</span>','em')
+ +`<div class="kidbubble" style="left:870px;top:315px;font-size:26px;color:#241034;transform:rotate(-3deg)">Made by kids, for kids! 💡</div>`);
+</script></body></html>
