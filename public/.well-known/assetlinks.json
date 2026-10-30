@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.netlify.smartbite_pro.twa",
+    "sha256_cert_fingerprints": ["AC:44:A9:E5:8D:E5:C5:26:CA:F6:83:BE:D7:5B:7C:DD:09:A4:45:B4:F6:85:AB:BF:D6:BD:D0:B8:5D:37:01:FC"]
+  }
+}]

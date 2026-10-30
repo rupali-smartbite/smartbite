@@ -37,3 +37,10 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
     Service-Worker-Allowed = "/"
+
+# Android app link (lets the SmartBite APK open full screen, without a browser address bar)
+[[headers]]
+  for = "/.well-known/assetlinks.json"
+  [headers.values]
+    Content-Type = "application/json"
+    Access-Control-Allow-Origin = "*"
