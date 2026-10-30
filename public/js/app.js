@@ -194,10 +194,11 @@ function applyTheme() {
   const OLD_PAL = { peach: 'kesar', mint: 'pudina', lavender: 'jamuni', sky: 'neela', blush: 'gulabi', lemon: 'chandan' };
   if (OLD_PAL[S.profile.palette]) { S.profile = { ...S.profile, palette: OLD_PAL[S.profile.palette] }; store.set('profile', S.profile); }
   document.documentElement.setAttribute('data-palette', 'masala'); // one SmartBite brand palette everywhere
+  if (!document.documentElement.dataset.brand) document.documentElement.setAttribute('data-brand', 'green');
   document.documentElement.setAttribute('data-text', S.profile.textSize || 'normal');
   document.documentElement.setAttribute('data-motion', S.profile.motion || 'auto');
   if (!document.body.classList.contains('theme-ready')) setTimeout(() => document.body.classList.add('theme-ready'), 600); // no colour fade on first load
-  const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.content = PALETTES[0][2][0];
+  const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.content = document.documentElement.dataset.brand === 'blue' ? '#1A5BB0' : '#17784A';
   document.documentElement.lang = S.profile.lang;
 }
 
