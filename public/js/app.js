@@ -193,12 +193,11 @@ function applyTheme() {
   document.documentElement.setAttribute('data-theme', th === 'auto' ? (h >= 19 || h < 6 ? 'dark' : 'light') : th);
   const OLD_PAL = { peach: 'kesar', mint: 'pudina', lavender: 'jamuni', sky: 'neela', blush: 'gulabi', lemon: 'chandan' };
   if (OLD_PAL[S.profile.palette]) { S.profile = { ...S.profile, palette: OLD_PAL[S.profile.palette] }; store.set('profile', S.profile); }
-  document.documentElement.setAttribute('data-palette', 'masala'); // one SmartBite brand palette everywhere
-  if (!document.documentElement.dataset.brand) document.documentElement.setAttribute('data-brand', 'green');
+  document.documentElement.setAttribute('data-palette', S.profile.palette || 'masala');
   document.documentElement.setAttribute('data-text', S.profile.textSize || 'normal');
   document.documentElement.setAttribute('data-motion', S.profile.motion || 'auto');
   if (!document.body.classList.contains('theme-ready')) setTimeout(() => document.body.classList.add('theme-ready'), 600); // no colour fade on first load
-  const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.content = document.documentElement.dataset.brand === 'blue' ? '#1A5BB0' : '#17784A';
+  const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.content = (PALETTES.find((x) => x[0] === S.profile.palette) || PALETTES[0])[2][0];
   document.documentElement.lang = S.profile.lang;
 }
 
@@ -866,7 +865,7 @@ const RELATED = { chicken: ['chicken', 'fish', 'egg', 'paneer', 'dal', 'veg'], f
 const EXTRA_DISHES = [
   { name: 'Misal pav', img: '/img/dishes/misal-pav.jpg', d: 'veg', fam: 'dal', to: 'Sprouts salad with corn', why: 'Keep the protein-rich sprouts, but skip the oily tarri, farsan and white pav.' },
   { name: 'Dabeli', img: '/img/dishes/dabeli.jpg', d: 'veg', to: 'Methi thepla with curd', why: 'Dabeli is buttered maida pav with sev. Thepla is whole wheat with methi leaves, and curd adds protein.' },
-  { name: 'Pani puri', img: '/img/panipuri.jpg', d: 'veg', to: 'Sprouts chaat', why: 'The same tangy chaat taste from moong sprouts, without the deep-fried puris.' },
+  { name: 'Pani puri', img: pic('panipuri'), d: 'veg', to: 'Sprouts chaat', why: 'The same tangy chaat taste from moong sprouts, without the deep-fried puris.' },
   { name: 'Bhel puri', img: '/img/dishes/bhel-puri.jpg', d: 'veg', to: 'Sprouts chaat', why: 'Sprouts add protein and fibre. Go easy on the sev and sweet chutney.' },
   { name: 'Fried momos', img: '/img/dishes/fried-momos.jpg', d: 'veg', to: 'Steamed dhokla', why: 'Fried momos soak up oil. Steamed snacks like dhokla, or steamed momos, are much lighter.' },
   { name: 'Chole kulche', img: '/img/dishes/chole-kulche.jpg', d: 'veg', to: 'Chana masala with roti', why: 'Keep the chole, and swap the buttered maida kulcha for a whole-wheat roti.' },
@@ -1757,7 +1756,7 @@ function screenProfile() {
       <fieldset><legend>${esc(t('allergens'))}</legend><div class="checks">${ALLERGENS.map((a) => `<label class="ck"><input type="checkbox" name="al" value="${a}" ${pr.allergens.includes(a) ? 'checked' : ''}><span>${a}</span></label>`).join('')}</div></fieldset>`,
     look: `<div class="look-preview" aria-hidden="true"><div class="lp-top"><span class="lp-dot"></span><b>Your colours</b><span class="lp-tog"><i></i></span></div><div class="lp-card"><small>How buttons and verdicts will look</small><div class="lp-pills"><span class="pill v-good">${esc(t('good'))}</span><span class="pill v-okay">${esc(t('okay'))}</span><span class="pill v-avoid">${esc(t('avoid'))}</span></div></div><span class="lp-btn">Button</span></div>
       <fieldset><legend>Mode</legend><div class="modepick">${[['light', '☀️', t('light')], ['dark', '🌙', t('dark')], ['auto', '🌗', 'Auto']].map(([v, e, l]) => `<label class="ck"><input type="radio" name="theme" value="${v}" ${pr.theme === v ? 'checked' : ''}><span>${e} ${esc(l)}</span></label>`).join('')}</div></fieldset>
-
+      <fieldset><legend>Colour theme</legend><div class="swatches">${PALETTES.map(([id, label, cols]) => `<label class="swatch"><input type="radio" name="palette" value="${id}" ${(pr.palette || 'masala') === id ? 'checked' : ''}><span class="sw" style="background:conic-gradient(${cols[0]} 0 25%, ${cols[1]} 0 50%, ${cols[2]} 0 75%, ${cols[3]} 0)"></span><b>${label}</b></label>`).join('')}</div></fieldset>
       <fieldset><legend>Text size</legend><div class="modepick">${[['normal', 'A', 'Normal'], ['large', 'A+', 'Large']].map(([v, e, l]) => `<label class="ck"><input type="radio" name="textSize" value="${v}" ${(pr.textSize || 'normal') === v ? 'checked' : ''}><span><b>${e}</b> ${l}</span></label>`).join('')}</div></fieldset>
       <fieldset><legend>Animations</legend><div class="modepick">${[['auto', 'Full'], ['reduce', 'Reduced']].map(([v, l]) => `<label class="ck"><input type="radio" name="motion" value="${v}" ${(pr.motion || 'auto') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div></fieldset>`,
   };
@@ -1974,7 +1973,6 @@ async function route() {
   renderNav(navKey);
   window.scrollTo(0, 0);
   ({ home: screenHome, game: screenGame, play: screenPlayHub, quiz: screenQuiz, sugar: screenSugar, swaps: screenSwaps, explore: screenExplore, coins: screenCoins, dish: () => screenDish(arg), shop: () => screenShop(arg), cart: screenCart, checkout: screenCheckout, reviews: screenHome, scan: () => screenScan(arg), result: screenResult, plate: screenPlate, label: screenLabel, compare: screenCompare, tracker: screenTracker, profile: screenProfile, plans: screenPlans, partner: screenPartner }[page] || screenHome)();
-  if (!['home', ''].includes(page) && !view().querySelector('.brandbar')) view().insertAdjacentHTML('afterbegin', '<a class="brandbar" href="#/home" aria-label="SmartBite home"><img src="/logo.svg" alt="" width="30" height="30"><b>SmartBite</b><small>Scan. Know. Eat smart.</small></a>');
   const v = view(); v.classList.remove('view-enter'); void v.offsetWidth; v.classList.add('view-enter');
 }
 

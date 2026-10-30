@@ -9,8 +9,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#EEF8F2",
-  "theme_color": "#17784A",
+  "background_color": "#FFF3E2",
+  "theme_color": "#5B2A86",
   "categories": ["health", "food", "education", "lifestyle"],
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

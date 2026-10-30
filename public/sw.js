@@ -1,7 +1,7 @@
 // SmartBite service worker: lets the app install on phones and open even with a weak connection.
 // Pages and code are always fetched fresh first (so updates show at once), with the saved copy
 // used only when offline. API answers and personal data are never cached.
-const CACHE = 'smartbite-v33';
+const CACHE = 'smartbite-v34';
 const SHELL = ['/', '/index.html', '/styles.css', '/js/app.js', '/js/data.js', '/js/india-db.js', '/js/score.js', '/js/i18n.js', '/js/validate.js', '/logo.svg', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
