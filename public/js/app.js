@@ -2057,3 +2057,6 @@ applyTheme();
 setInterval(() => { if (S.profile.theme === 'auto') applyTheme(); }, 60000);
 mountChat();
 route();
+
+// Installable app (Android APK / Add to Home screen): register the service worker
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
