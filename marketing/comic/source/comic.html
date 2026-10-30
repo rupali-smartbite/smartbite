@@ -1,0 +1,160 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Bangers;src:url(fonts/Bangers-Regular.ttf)}
+@font-face{font-family:Baloo;src:url(fonts/Baloo2.ttf);font-weight:400 800}
+:root{--ink:#14091F;--jamun:#5B2A86;--haldi:#FFC21A;--kesar:#FF7A00;--mirchi:#E63946;--pudina:#1FB36B;--sky:#3BA7F0;--paper:#FFF8E7;--pink:#FF5D8F}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#999;padding:20px;display:flex;flex-direction:column;gap:30px;align-items:flex-start;font-family:Baloo,sans-serif;color:var(--ink)}
+.piece{position:relative;overflow:hidden;background:var(--paper)}
+/* halftone paper */
+.halftone{background-color:var(--haldi);background-image:radial-gradient(rgba(255,122,0,.55) 22%,transparent 24%);background-size:14px 14px}
+.halftone.purple{background-color:var(--jamun);background-image:radial-gradient(rgba(255,255,255,.12) 22%,transparent 24%)}
+.halftone.mint{background-color:#BFF0D6;background-image:radial-gradient(rgba(31,179,107,.35) 22%,transparent 24%)}
+.halftone.pink{background-color:#FFD3E1;background-image:radial-gradient(rgba(255,93,143,.35) 22%,transparent 24%)}
+/* panels */
+.panel{position:absolute;border:7px solid var(--ink);background:#fff;overflow:hidden;box-shadow:9px 9px 0 var(--ink)}
+.panel > img{width:100%;height:100%;object-fit:cover;display:block}
+/* comic type */
+.bang{font-family:Bangers,Impact,sans-serif;letter-spacing:.03em;line-height:.9;color:#fff;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:5px 5px 0 var(--ink)}
+.bang.y{color:var(--haldi)}.bang.o{color:var(--kesar)}.bang.g{color:var(--pudina)}.bang.p{color:var(--pink)}
+.caption{position:absolute;background:var(--haldi);border:5px solid var(--ink);padding:.35em .7em;font-family:Bangers,sans-serif;letter-spacing:.04em;line-height:1;box-shadow:5px 5px 0 var(--ink);z-index:3}
+.caption.w{background:#fff}.caption.p{background:var(--pink);color:#fff}.caption.g{background:var(--pudina);color:#fff}
+/* speech bubble */
+.bubble{position:absolute;background:#fff;border:5px solid var(--ink);border-radius:50% 50% 50% 50%/55% 55% 45% 45%;padding:.6em 1em;font-family:Baloo,sans-serif;font-weight:800;line-height:1.05;text-align:center;z-index:4}
+.bubble::before{content:"";position:absolute;bottom:-30px;left:34%;width:44px;height:34px;background:var(--ink);clip-path:polygon(0 0,100% 0,18% 100%)}
+.bubble::after{content:"";position:absolute;bottom:-19px;left:calc(34% + 8px);width:28px;height:24px;background:#fff;clip-path:polygon(0 0,100% 0,14% 100%)}
+.bubble.right::before{left:auto;right:30%;clip-path:polygon(0 0,100% 0,82% 100%)}
+.bubble.right::after{left:auto;right:calc(30% + 8px);clip-path:polygon(0 0,100% 0,86% 100%)}
+/* starburst */
+.burst{position:absolute;display:grid;place-items:center;z-index:5}
+.burst svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.burst span{position:relative;font-family:Bangers,sans-serif;text-align:center;line-height:.9;transform:rotate(-10deg)}
+/* QR panels */
+.qrp{position:absolute;background:#fff;border:7px solid var(--ink);box-shadow:9px 9px 0 var(--ink);display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 14px 12px;z-index:3}
+.qrp .hd{white-space:nowrap;font-family:Bangers,sans-serif;letter-spacing:.04em;line-height:1;color:#fff;border:4px solid var(--ink);padding:.15em .55em .1em;margin-top:-34px;margin-bottom:10px;box-shadow:4px 4px 0 var(--ink);transform:rotate(-2deg)}
+.qrp .hd.app{background:var(--pudina)}.qrp .hd.rev{background:var(--kesar)}
+.qrp img{width:100%;aspect-ratio:1;image-rendering:pixelated;display:block;border:3px solid var(--ink);border-radius:6px}
+.qrp b{font-weight:800;line-height:1.1;margin-top:8px;display:block}
+.qrp small{font-weight:600;opacity:.75;line-height:1.15;display:block}
+.logo{display:flex;align-items:center;gap:.3em;font-family:Baloo;font-weight:800;letter-spacing:-.01em}
+.logo img{width:1.35em;height:1.35em;border-radius:.3em;border:3px solid var(--ink)}
+.chipline{position:absolute;display:flex;gap:12px;flex-wrap:wrap;z-index:3}
+.chipline span{background:#fff;border:4px solid var(--ink);border-radius:999px;padding:.2em .8em;font-weight:800;box-shadow:4px 4px 0 var(--ink)}
+
+/* ================= 1. EVENT BANNER 1800x900 ================= */
+#banner{width:1800px;height:900px}
+#banner .title{position:absolute;left:46px;top:40px;width:640px;z-index:3}
+#banner .title .logo{font-size:40px;margin-bottom:18px}
+#banner .title h1{font-size:132px}
+#banner .title p{font-size:29px;font-weight:700;margin-top:22px;line-height:1.25;background:#fff;border:5px solid var(--ink);padding:14px 18px;box-shadow:6px 6px 0 var(--ink)}
+
+/* ================= 2. A3 COMIC COVER 1240x1754 ================= */
+#a3{width:1240px;height:1754px;background:var(--jamun)}
+#a3 .cover{position:absolute;inset:0}
+#a3 .cover img{width:100%;height:100%;object-fit:cover;object-position:center 30%}
+#a3 .masthead{position:absolute;left:0;right:0;top:0;padding:34px 46px 0;z-index:3}
+#a3 .issue{display:flex;justify-content:space-between;align-items:center;font-family:Bangers;font-size:34px;letter-spacing:.06em;color:#fff;-webkit-text-stroke:2px var(--ink);paint-order:stroke fill}
+#a3 h1{font-size:190px;margin-top:6px}
+#a3 h2{font-size:84px;margin-top:-6px}
+#a3 .bottom{position:absolute;left:0;right:0;bottom:0;height:470px;background:var(--paper);border-top:9px solid var(--ink);z-index:4}
+
+/* ================= 3. STANDEE 1000x2400 ================= */
+#standee{width:1000px;height:2400px}
+#standee .top{position:absolute;left:0;right:0;top:0;height:380px;padding:40px 46px;z-index:3}
+#standee .top .logo{font-size:44px}
+#standee .top h1{font-size:126px;margin-top:20px}
+
+/* ================= 4. INSTAGRAM 1080 (540 @2x) ================= */
+#insta{width:540px;height:540px}
+/* ================= 5. STORY 1080x1920 (540x960 @2x) ================= */
+#story{width:540px;height:960px}
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="star" viewBox="0 0 200 200"><polygon points="100,0 121,52 176,24 154,80 200,100 154,120 176,176 121,148 100,200 79,148 24,176 46,120 0,100 46,80 24,24 79,52" stroke="#14091F" stroke-width="7" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<!-- ===================== 1. BANNER ===================== -->
+<section class="piece halftone" id="banner">
+  <div class="title">
+    <div class="logo"><img src="logo.svg" alt="">SmartBite</div>
+    <h1 class="bang">SCAN IT!<br><span class="y">KNOW IT!</span><br><span class="g">EAT SMART!</span></h1>
+    <p>Bitu, your food-buddy robot, checks any snack packet or thali in 5 seconds, and finds a tasty desi swap!</p>
+  </div>
+  <div class="panel" style="left:720px;top:40px;width:520px;height:470px;transform:rotate(-1.5deg)"><img src="comic/bitu-hero.jpg" alt=""></div>
+  <div class="caption" style="left:740px;top:28px;font-size:36px;transform:rotate(-3deg)">BITU TO THE RESCUE!</div>
+  <div class="panel" style="left:1270px;top:40px;width:490px;height:300px;transform:rotate(1.2deg)"><img src="comic/junk-villains.jpg" alt="" style="object-position:center 40%"></div>
+  <div class="caption p" style="left:1300px;top:290px;font-size:32px;transform:rotate(2deg)">THE JUNK GANG!</div>
+  <div class="burst" style="left:1180px;top:200px;width:150px;height:150px"><svg><use href="#star" fill="#E63946"/></svg><span class="bang" style="font-size:54px">VS!</span></div>
+  <div class="panel" style="left:720px;top:540px;width:520px;height:320px;transform:rotate(1deg)"><img src="comic/healthy-team.jpg" alt=""></div>
+  <div class="caption g" style="left:960px;top:820px;font-size:32px;transform:rotate(-2deg)">SWAP SQUAD WINS!</div>
+  <div class="qrp" style="left:1290px;top:410px;width:220px"><span class="hd app" style="font-size:30px">GET THE APP!</span><img src="qr-app.png" alt=""><b style="font-size:21px">Android app</b><small style="font-size:16px">Scan with phone camera</small></div>
+  <div class="qrp" style="left:1545px;top:410px;width:220px"><span class="hd rev" style="font-size:30px">TELL US!</span><img src="qr-review.png" alt=""><b style="font-size:21px">Rate SmartBite</b><small style="font-size:16px">Takes 30 seconds</small></div>
+  <div class="bubble" style="left:1380px;top:775px;font-size:26px;width:330px">Scan me, dost! 📱</div>
+  <div class="chipline" style="left:46px;bottom:44px;font-size:22px"><span>📦 Packet scan</span><span>🍛 Thali check</span><span>🔄 Desi swaps</span><span>🤖 Ask Bitu</span></div>
+</section>
+
+<!-- ===================== 2. A3 COMIC COVER ===================== -->
+<section class="piece" id="a3">
+  <div class="cover"><img src="comic/bitu-tiffin-cover.jpg" alt=""></div>
+  <div class="masthead">
+    <div class="issue"><span>SMARTBITE COMICS · ISSUE #1</span><span>FREE!</span></div>
+    <h1 class="bang y">CAPTAIN BITU</h1>
+    <h2 class="bang">VS THE <span class="p">JUNK GANG!</span></h2>
+  </div>
+  <div class="bubble right" style="right:60px;top:560px;font-size:40px;width:360px">Is your snack<br>junk food?<br>Let's scan it!</div>
+  <div class="burst" style="left:40px;top:640px;width:250px;height:250px"><svg><use href="#star" fill="#FFC21A"/></svg><span class="bang o" style="font-size:58px">5 SEC<br>SCAN!</span></div>
+  <div class="bottom halftone mint">
+    <div class="caption w" style="left:46px;top:-34px;font-size:46px;transform:rotate(-1.5deg)">JOIN BITU'S SWAP SQUAD!</div>
+    <div style="position:absolute;left:56px;top:70px;width:560px;font-size:33px;font-weight:700;line-height:1.3">
+      <div style="background:#fff;border:5px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:18px 22px">
+        ✅ Honest verdicts for <b>adults and kids</b><br>✅ Healthier <b>desi swaps</b> for every dish<br>✅ Chat with Bitu in <b>English, हिन्दी, मराठी</b>
+      </div>
+      <div class="logo" style="font-size:46px;margin-top:30px"><img src="logo.svg" alt="">SmartBite</div>
+    </div>
+    <div class="qrp" style="left:680px;top:58px;width:240px"><span class="hd app" style="font-size:32px">GET THE APP!</span><img src="qr-app.png" alt=""><b style="font-size:23px">Android app</b></div>
+    <div class="qrp" style="left:950px;top:58px;width:240px"><span class="hd rev" style="font-size:32px">TELL US!</span><img src="qr-review.png" alt=""><b style="font-size:23px">Rate SmartBite</b></div>
+  </div>
+</section>
+
+<!-- ===================== 3. STANDEE (4-panel comic strip) ===================== -->
+<section class="piece halftone" id="standee">
+  <div class="top">
+    <div class="logo"><img src="logo.svg" alt="">SmartBite</div>
+    <h1 class="bang">SNACK TIME<br><span class="y">SUPERHERO!</span></h1>
+  </div>
+  <div class="panel" style="left:44px;top:400px;width:440px;height:420px;transform:rotate(-1deg)"><img src="comic/junk-villains.jpg" alt=""></div>
+  <div class="caption p" style="left:60px;top:384px;font-size:34px;transform:rotate(-3deg)">1. UH-OH! JUNK GANG!</div>
+  <div class="panel" style="left:516px;top:400px;width:440px;height:420px;transform:rotate(1deg)"><img src="comic/kids-scan.jpg" alt="" style="object-position:30% center"></div>
+  <div class="caption" style="left:540px;top:384px;font-size:34px;transform:rotate(2deg)">2. SCAN THE PACKET!</div>
+  <div class="panel" style="left:44px;top:870px;width:912px;height:560px;transform:rotate(-.6deg)"><img src="comic/bitu-hero.jpg" alt="" style="object-position:center 40%"></div>
+  <div class="caption w" style="left:70px;top:852px;font-size:40px;transform:rotate(-2deg)">3. BITU TO THE RESCUE!</div>
+  <div class="bubble right" style="right:80px;top:950px;font-size:34px;width:330px">Sugar alert!<br>Try chaas instead!</div>
+  <div class="panel" style="left:44px;top:1480px;width:912px;height:430px;transform:rotate(.6deg)"><img src="comic/healthy-team.jpg" alt=""></div>
+  <div class="caption g" style="left:600px;top:1880px;font-size:40px;transform:rotate(-2deg)">4. SWAP SQUAD WINS!</div>
+  <div class="qrp" style="left:90px;top:2010px;width:330px"><span class="hd app" style="font-size:38px">GET THE APP!</span><img src="qr-app.png" alt="" style="width:78%"><b style="font-size:27px">Android app</b></div>
+  <div class="qrp" style="left:580px;top:2010px;width:330px"><span class="hd rev" style="font-size:38px">TELL US!</span><img src="qr-review.png" alt="" style="width:78%"><b style="font-size:27px">Rate SmartBite</b></div>
+</section>
+
+<!-- ===================== 4. INSTAGRAM ===================== -->
+<section class="piece halftone purple" id="insta">
+  <div class="panel" style="left:18px;top:18px;width:504px;height:330px;border-width:5px;box-shadow:6px 6px 0 var(--ink)"><img src="comic/bitu-hero.jpg" alt="" style="object-position:center 35%"></div>
+  <div class="bubble" style="left:250px;top:30px;font-size:19px;width:250px;border-width:4px">Scan before<br>you snack! 📱</div>
+  <div class="caption" style="left:26px;top:318px;font-size:28px;border-width:4px;transform:rotate(-2deg)">MEET BITU, YOUR FOOD HERO!</div>
+  <div class="qrp" style="left:30px;top:385px;width:225px;flex-direction:row;gap:10px;padding:10px;border-width:5px;box-shadow:6px 6px 0 var(--ink)"><img src="qr-app.png" alt="" style="width:105px;flex:none"><div style="text-align:left"><b style="font-size:24px;font-family:Bangers;letter-spacing:.03em;color:var(--pudina);-webkit-text-stroke:1px var(--ink)">GET THE APP!</b><small style="font-size:13px">Android, free</small></div></div>
+  <div class="qrp" style="left:285px;top:385px;width:225px;flex-direction:row;gap:10px;padding:10px;border-width:5px;box-shadow:6px 6px 0 var(--ink)"><img src="qr-review.png" alt="" style="width:105px;flex:none"><div style="text-align:left"><b style="font-size:24px;font-family:Bangers;letter-spacing:.03em;color:var(--kesar);-webkit-text-stroke:1px var(--ink)">TELL US!</b><small style="font-size:13px">30-second review</small></div></div>
+</section>
+
+<!-- ===================== 5. STORY ===================== -->
+<section class="piece halftone" id="story">
+  <div style="position:absolute;left:24px;top:22px;z-index:3"><div class="logo" style="font-size:24px"><img src="logo.svg" alt="">SmartBite</div></div>
+  <h1 class="bang" style="position:absolute;left:24px;top:66px;font-size:66px;z-index:3;-webkit-text-stroke-width:2px;text-shadow:3px 3px 0 var(--ink)">ARRE WAH!<br><span class="g">SCAN IT FIRST!</span></h1>
+  <div class="panel" style="left:18px;top:220px;width:504px;height:340px;border-width:5px;box-shadow:6px 6px 0 var(--ink);transform:rotate(-1deg)"><img src="comic/kids-scan.jpg" alt=""></div>
+  <div class="bubble right" style="right:20px;top:200px;font-size:17px;width:200px;border-width:4px">This chips packet<br>has ⅓ of a day's salt!</div>
+  <div class="panel" style="left:18px;top:585px;width:504px;height:180px;border-width:5px;box-shadow:6px 6px 0 var(--ink);transform:rotate(1deg)"><img src="comic/healthy-team.jpg" alt="" style="object-position:center 30%"></div>
+  <div class="caption g" style="left:250px;top:744px;font-size:22px;border-width:4px;transform:rotate(-2deg)">SWAP SQUAD!</div>
+  <div class="qrp" style="left:40px;top:800px;width:210px;flex-direction:row;gap:8px;padding:8px;border-width:5px;box-shadow:5px 5px 0 var(--ink)"><img src="qr-app.png" alt="" style="width:100px;flex:none"><div style="text-align:left"><b style="font-size:22px;font-family:Bangers;letter-spacing:.03em;color:var(--pudina);-webkit-text-stroke:1px var(--ink)">GET THE APP!</b><small style="font-size:12px">Android, free</small></div></div>
+  <div class="qrp" style="left:290px;top:800px;width:210px;flex-direction:row;gap:8px;padding:8px;border-width:5px;box-shadow:5px 5px 0 var(--ink)"><img src="qr-review.png" alt="" style="width:100px;flex:none"><div style="text-align:left"><b style="font-size:22px;font-family:Bangers;letter-spacing:.03em;color:var(--kesar);-webkit-text-stroke:1px var(--ink)">TELL US!</b><small style="font-size:12px">30-second review</small></div></div>
+</section>
+</body></html>
