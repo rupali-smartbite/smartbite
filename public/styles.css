@@ -1240,3 +1240,39 @@ body.pre-login .site-foot { display: block; }
 .msg.bot .msg-flag{display:block;margin:4px 0 0 4px;background:none;border:0;padding:2px 4px;font:600 12px var(--body);color:var(--muted);cursor:pointer;opacity:.8}
 .msg.bot .msg-flag:hover{opacity:1;text-decoration:underline}
 .msg.bot .msg-flag:disabled{cursor:default;text-decoration:none;color:var(--pudina)}
+
+/* ================= Feature tour ================= */
+body.tour-open { overflow: hidden; }
+.tour { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 16px; background: rgba(36,16,52,.55); backdrop-filter: blur(4px); opacity: 0; transition: opacity .22s ease; }
+.tour.in { opacity: 1; } .tour.closing { opacity: 0; }
+.tour-card { position: relative; width: min(420px, 100%); background: #fff; color: #241034; border: 4px solid #241034; border-radius: 30px; box-shadow: 8px 8px 0 #241034; overflow: hidden; transform: translateY(14px) scale(.98); transition: transform .26s cubic-bezier(.2,.8,.2,1); }
+.tour.in .tour-card { transform: none; }
+.tour-skip { position: absolute; top: 12px; right: 12px; z-index: 3; background: #fff; border: 2.5px solid #241034; border-radius: 999px; padding: 4px 14px; font: 700 14px var(--body); color: #241034; cursor: pointer; }
+.tour-track { display: flex; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.tour-slide { flex: 0 0 100%; padding: 0 22px 8px; text-align: center; }
+.tour-art { position: relative; height: 210px; margin: 0 -22px 14px; background: var(--tbg); background-image: radial-gradient(rgba(36,16,52,.10) 1.6px, transparent 1.8px); background-size: 18px 18px; border-bottom: 4px solid #241034; display: flex; align-items: center; justify-content: center; gap: 6px; overflow: hidden; }
+.tour-mascot { display: block; height: 150px; filter: drop-shadow(4px 5px 0 rgba(36,16,52,.22)); }
+.tour-mascot svg { height: 100%; width: auto; display: block; }
+.tour-mascot.m1 { height: 112px; align-self: flex-end; margin-bottom: 26px; transform: rotate(8deg); }
+.tour-mascot.m0 { transform: rotate(-4deg); }
+.tour-spark { position: absolute; top: 16px; left: 18px; width: 34px; height: 34px; }
+.tour-spark svg { width: 100%; height: 100%; }
+.tour-slide.on .tour-mascot.m0 { animation: tour-bob 2.4s ease-in-out infinite; }
+.tour-slide.on .tour-mascot.m1 { animation: tour-bob 2.4s .4s ease-in-out infinite; }
+@keyframes tour-bob { 0%,100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+.tour-slide h2 { font: 800 27px/1.1 var(--display); margin: 0 0 8px; color: #241034; }
+.tour-slide p { font-size: 16.5px; line-height: 1.45; color: #5d4d6b; margin: 0 auto; max-width: 340px; min-height: 72px; }
+.tour-try { margin-top: 12px; background: #FFC93C; color: #241034; border: 3px solid #241034; border-radius: 999px; padding: 7px 18px; font: 800 15px var(--body); box-shadow: 3px 3px 0 #241034; cursor: pointer; }
+.tour-try:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #241034; }
+.tour-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px 6px; }
+.tour-back, .tour-next { white-space: nowrap; border-radius: 999px; padding: 10px 18px; font: 800 15px var(--body); cursor: pointer; min-width: 92px; }
+.tour-back { background: #fff; border: 2.5px solid #241034; color: #241034; }
+.tour-next { background: #5B2A86; color: #fff; border: 3px solid #241034; box-shadow: 3px 3px 0 #241034; }
+.tour-dots { display: flex; gap: 6px; }
+.tour-dots i { width: 8px; height: 8px; border-radius: 99px; background: #D9CDE6; transition: width .25s, background .25s; }
+.tour-dots i.on { width: 22px; background: #FB8500; }
+.tour-count { text-align: center; font-size: 12px; color: #8a7b97; margin: 0 0 12px; }
+:root[data-theme="dark"] .tour-card { background: #FFFDF7; }
+@media (prefers-reduced-motion: reduce) { .tour, .tour-card, .tour-track { transition: none; } .tour-slide.on .tour-mascot { animation: none !important; } }
+:root[data-motion="off"] .tour-slide.on .tour-mascot { animation: none !important; }
+.tour-help { position: absolute; top: 14px; right: 66px; }

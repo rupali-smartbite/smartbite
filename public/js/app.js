@@ -2,6 +2,7 @@ import { PRODUCTS, FRESH, ALLERGENS, companyOf } from './data.js';
 import { scoreFor, verdictKey, swaps, fuzzyFind, decodeIngredients, detectAllergens, dietFlags, LIMITS, junkMeter, typeEmoji, normalize } from './score.js';
 import { T } from './i18n.js';
 import { checkEnquiry, checkName, checkCompany, checkEmail, checkPhone, checkMessage } from './validate.js';
+import { openTour } from './tour.js';
 
 const API = (window.__HATCHABLE__ && window.__HATCHABLE__.api) || '/api';
 const $ = (s, el = document) => el.querySelector(s);
@@ -125,6 +126,14 @@ const VCOLOR = { good: '#20B26B', okay: '#FB8500', avoid: '#E63946' };
 const AV_COLORS = ['#5B2A86', '#E63946', '#FB8500', '#20B26B', '#2F80ED', '#FF5D8F'];
 
 // ---------------- UI helpers ----------------
+// Feature tour: shown once after sign-in, and any time from Profile
+function startTour() {
+  openTour({
+    lang: S.profile.lang,
+    onClose: () => store.set('toured', true),
+    onGo: (go) => { if (go === 'chat') { location.hash = '#/home'; setTimeout(() => toggleChat(true), 350); } else location.hash = go; },
+  });
+}
 function toast(msg, kind = '') {
   const el = document.createElement('div');
   el.className = 'toast ' + kind; el.textContent = msg; el.setAttribute('role', 'status');
@@ -1786,6 +1795,7 @@ function screenProfile() {
       <a class="row" href="#/play"><span class="grow">🎮 Play &amp; Learn games</span>›</a>
       <a class="row" href="#/compare"><span class="grow">⚖️ Compare products</span>›</a>
       <a class="row" href="#/partner"><span class="grow">🤝 ${esc(t('partner'))}</span>›</a>
+      <a class="row" href="#/profile" data-tour><span class="grow">🧭 Take the tour</span>›</a>
       <a class="row" href="/about.html"><span class="grow">ℹ️ About SmartBite</span>›</a>
       <a class="row" href="/privacy.html"><span class="grow">🔒 Privacy policy</span>›</a>
       <button class="row danger" id="reset"><span class="grow">🗑 Clear my history and tracker</span></button>
@@ -1962,6 +1972,7 @@ function screenLogin() {
     document.body.classList.remove('pre-login'); applyTheme();
     location.hash = '#/home'; route();
     toast(`${WELCOME_COINS} SmartBite Coins added. Welcome${name ? ', ' + name : ''}!`);
+    setTimeout(startTour, 700);
   };
   $('#lgf').onsubmit = (e) => { e.preventDefault(); const f = new FormData(e.target); start(String(f.get('name') || '').trim().slice(0, 40), f); };
   $('#lgGuest').onclick = () => start('', null);
@@ -2074,11 +2085,13 @@ document.addEventListener('click', (e) => {
   if (bcEl) openBarcode(bcEl.dataset.bc);
   if (e.target.closest('[data-act=bitu]')) toggleChat(true);
 });
+document.addEventListener('click', (e) => { if (e.target.closest('[data-tour]')) { e.preventDefault(); startTour(); } });
 window.addEventListener('hashchange', () => { route(); if (CHAT.open) renderChat(); });
 applyTheme();
 setInterval(() => { if (S.profile.theme === 'auto') applyTheme(); }, 60000);
 mountChat();
 route();
+if (S.session && !store.get('toured', false)) setTimeout(startTour, 1200);
 
 // Installable app (Android APK / Add to Home screen): register the service worker
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
