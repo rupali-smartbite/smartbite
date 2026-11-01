@@ -2022,6 +2022,13 @@ function mountChat() {
     <p class="bitu-note">AI answers can be wrong. For health conditions, ask a doctor.</p>`;
   document.body.appendChild(panel);
   panel.addEventListener('click', (e) => {
+    const fl = e.target.closest('[data-flag]');
+    if (fl) {
+      const m = CHAT.msgs[+fl.dataset.flag], q = CHAT.msgs[+fl.dataset.flag - 1];
+      const body = `Hi SmartBite team,\n\nThis answer from Bitu looks wrong or not okay:\n\nQuestion: ${q ? q.content : ''}\n\nAnswer: ${m ? m.content : ''}\n\nWhat was wrong:\n`;
+      location.href = 'mailto:rupaligurav15@gmail.com?subject=' + encodeURIComponent('Report a Bitu answer') + '&body=' + encodeURIComponent(body.slice(0, 1800));
+      fl.textContent = '✓ Thanks for reporting'; fl.disabled = true; return;
+    }
     if (e.target.closest('[data-chat-close]')) toggleChat(false);
     else if (e.target.closest('[data-chat-clear]')) { CHAT.msgs = []; saveChat(); renderChat(); }
     else { const sg = e.target.closest('[data-sug]'); if (sg) sendChat(sg.dataset.sug); }
@@ -2042,7 +2049,7 @@ function renderChat() {
   ctx.hidden = !cp;
   if (cp) ctx.innerHTML = `${cp.p.imgSmall || cp.p.img ? `<img src="${esc(cp.p.imgSmall || cp.p.img)}" alt="">` : ''}<span>Asking about <b>${esc(cp.p.brand)} ${esc(cp.p.name)}</b></span>`;
   const hello = `<div class="msg bot"><div class="b">Namaste! I'm <b>Bitu</b> 🤖. Ask me anything about food: is a snack healthy, what an E-number means, tiffin ideas, or healthier swaps.</div></div>`;
-  log.innerHTML = hello + CHAT.msgs.map((m) => `<div class="msg ${m.role === 'user' ? 'me' : 'bot'}${m.error ? ' err' : ''}"><div class="b">${m.role === 'user' ? esc(m.content) : md(m.content)}</div></div>`).join('') + (CHAT.busy ? '<div class="msg bot typing"><div class="b"><i></i><i></i><i></i></div></div>' : '');
+  log.innerHTML = hello + CHAT.msgs.map((m, i) => `<div class="msg ${m.role === 'user' ? 'me' : 'bot'}${m.error ? ' err' : ''}"><div class="b">${m.role === 'user' ? esc(m.content) : md(m.content)}</div>${m.role !== 'user' && !m.error ? `<button class="msg-flag" data-flag="${i}" aria-label="Report this answer">🚩 Report</button>` : ''}</div>`).join('') + (CHAT.busy ? '<div class="msg bot typing"><div class="b"><i></i><i></i><i></i></div></div>' : '');
   $('#bituSugs').innerHTML = CHAT.busy ? '' : chatSuggestions().slice(0, CHAT.msgs.length ? 3 : 6).map((q) => `<button class="chip" data-sug="${esc(q)}">${esc(q)}</button>`).join('');
   log.scrollTop = log.scrollHeight;
 }
