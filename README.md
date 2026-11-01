@@ -85,3 +85,24 @@ When Razorpay is added, add `https://checkout.razorpay.com` to `script-src` and 
 ## Data credits
 
 Open Food Facts (ODbL), Unsplash and Pexels photos, WHO and ICMR-NIN guidance.
+
+## Payments (Razorpay)
+
+Shop orders and the Pro / Family plans are paid through Razorpay. Payments switch on by
+themselves once these are set in Netlify → Site configuration → Environment variables:
+
+| Variable | Where to find it |
+|---|---|
+| `RAZORPAY_KEY_ID` | Razorpay Dashboard → Account & Settings → API Keys (starts with `rzp_test_` or `rzp_live_`) |
+| `RAZORPAY_KEY_SECRET` | shown once when you generate the key |
+| `RAZORPAY_WEBHOOK_SECRET` | Razorpay → Webhooks → add `https://smartbite-pro.netlify.app/api/pay/webhook` with events `order.paid` and `payment.failed`, and choose a secret |
+
+Redeploy after adding them. With `rzp_test_` keys the app shows **TEST MODE** and no real money moves.
+
+How it stays safe:
+- Prices come only from the server (`netlify/lib/shop.mjs`, `PLANS` in `netlify/lib/pay.mjs`). The app cannot change them.
+- A payment counts only after its Razorpay signature is checked with the secret key (`/api/pay/verify`). The webhook is a safety net if the app is closed mid-payment.
+- Plans are one-time 30-day passes (no auto-renewal). Inside the Play Store app, Premium is not sold (Google Play billing rules for digital goods); people can still use the 7-day free trial.
+- Shop products marked `sample: true` can never be bought.
+
+Tests: `node tests/pay.test.mjs` and `node --import ./tests/loader.mjs tests/functions.test.mjs`.

@@ -1,13 +1,13 @@
 import { SHOP, SHOP_CATS } from '../lib/shop.mjs';
+import { paymentsOn, testMode, PLANS } from '../lib/pay.mjs';
 
 // GET /api/shop -> the shop catalogue (products, categories, whether online payment is live)
-// Online payment (Razorpay) is not connected yet: PAYMENTS_LIVE stays false until the
-// payment step is built and the bank account is decided.
-const PAYMENTS_LIVE = false;
+// Online payment switches on by itself once RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are
+// set in Netlify (Site configuration → Environment variables).
 
 export default async () => Response.json(
-  { ok: true, payments: PAYMENTS_LIVE, cats: SHOP_CATS, products: SHOP },
-  { headers: { 'Cache-Control': 'public, max-age=300', 'Netlify-CDN-Cache-Control': 'public, s-maxage=600' } },
+  { ok: true, payments: paymentsOn(), test: paymentsOn() && testMode(), plans: Object.values(PLANS), cats: SHOP_CATS, products: SHOP },
+  { headers: { 'Cache-Control': 'public, max-age=60', 'Netlify-CDN-Cache-Control': 'public, s-maxage=60' } },
 );
 
 export const config = { path: '/api/shop', method: ['GET'] };

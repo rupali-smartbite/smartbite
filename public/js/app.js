@@ -2,7 +2,8 @@ import { PRODUCTS, FRESH, ALLERGENS, companyOf } from './data.js';
 import { scoreFor, verdictKey, swaps, fuzzyFind, decodeIngredients, detectAllergens, dietFlags, LIMITS, junkMeter, typeEmoji, normalize } from './score.js';
 import { T } from './i18n.js';
 import { checkEnquiry, checkName, checkCompany, checkEmail, checkPhone, checkMessage } from './validate.js';
-import { openTour } from './tour.js';
+import { openTour, ART } from './tour.js';
+import { payNow, isAndroidApp } from './pay.js';
 
 const API = (window.__HATCHABLE__ && window.__HATCHABLE__.api) || '/api';
 const $ = (s, el = document) => el.querySelector(s);
@@ -20,6 +21,8 @@ const store = {
 const S = {
   profile: { name: '', age: 'adult', conditions: [], allergens: [], diet: 'veg', lang: 'en', theme: 'auto', palette: 'masala', ...store.get('profile', {}) },
   plan: store.get('plan', 'free'),
+  planInfo: store.get('planInfo', null), // { plan, until, token?, trial? }
+  orders: store.get('orders', []),
   history: store.get('history', []),
   compare: store.get('compare', []),
   tracker: store.get('tracker', []),
@@ -1155,7 +1158,8 @@ async function screenShopItem(id) {
   $('#addCart').onclick = () => {
     const c = S.cart.find((x) => x.id === p.id);
     if (c) c.qty = q; else S.cart.push({ id: p.id, qty: q });
-    save('cart'); toast('Added to cart ✓'); screenShopItem(id);
+    save('cart'); flyToCart($('#addCart')); toast('Added to cart ✓');
+    setTimeout(() => { if (location.hash === '#/shop/' + id) screenShopItem(id); }, 800);
   };
 }
 async function screenCart() {
@@ -1196,38 +1200,57 @@ async function screenCheckout() {
     </form>
     <section class="card"><h3>Order summary</h3>${items.map((x) => `<div class="tot-row"><span>${esc(x.p.name)} × ${x.qty}</span><b>${rupees(x.p.price * x.qty)}</b></div>`).join('')}
       <div class="tot-row"><span>Delivery</span><b>${ship ? rupees(ship) : 'Free'}</b></div><div class="tot-row big"><span>Total</span><b>${rupees(total + ship)}</b></div></section>
-    ${S.coins.bal ? `<section class="card coin-use"><label class="cu-row"><input type="checkbox" id="useCoins"><span class="coin" aria-hidden="true"></span><span class="grow"><b>Use ${Math.min(S.coins.bal, Math.floor((total + ship) * COIN_MAX_SHARE))} SmartBite Coins</b><small class="muted">Save ${rupees(Math.min(S.coins.bal, Math.floor((total + ship) * COIN_MAX_SHARE)))} on this order</small></span></label><p class="muted small" id="coinEarn">You'll earn ${Math.round(total * COIN_BACK)} coins on this order.</p></section>` : `<p class="muted small centred">You'll earn ${Math.round(total * COIN_BACK)} SmartBite Coins on this order.</p>`}
+    ${S.coins.bal ? `<section class="card coin-use"><label class="cu-row"><input type="checkbox" id="useCoins"><span class="coin" aria-hidden="true"></span><span class="grow"><b>Use ${Math.min(S.coins.bal, Math.floor((total + ship) * COIN_MAX_SHARE), COIN_MAX_RUPEES)} SmartBite Coins</b><small class="muted">Save ${rupees(Math.min(S.coins.bal, Math.floor((total + ship) * COIN_MAX_SHARE), COIN_MAX_RUPEES))} on this order</small></span></label><p class="muted small" id="coinEarn">You'll earn ${Math.round(total * COIN_BACK)} coins on this order.</p></section>` : `<p class="muted small centred">You'll earn ${Math.round(total * COIN_BACK)} SmartBite Coins on this order.</p>`}
     <section class="card pay-box" id="payBox">
       <h3>Payment</h3>
       <div class="pay-opt"><span class="pay-ic">💳</span><div><b>UPI, cards and netbanking</b><p class="muted small">${d.payments ? 'Secure online payment' : 'Online payment is being set up. You can place orders here as soon as it opens.'}</p></div></div>
-      <button class="btn hot wide" id="payBtn" ${d.payments ? '' : 'disabled'}>${d.payments ? `Pay ${rupees(total + ship)}` : 'Payment opening soon'}</button>
+      <button class="btn hot wide ${d.payments ? 'fun-btn' : ''}" id="payBtn" ${d.payments ? '' : 'disabled'}>${d.payments ? `Pay ${rupees(total + ship)}` : 'Payment opening soon'}</button>
+      ${d.payments ? `<p class="pay-trust">🔒 Secure payment by Razorpay · UPI, cards, netbanking, wallets${d.test ? ' · <b>TEST MODE</b>' : ''}</p>` : ''}
     </section>`;
   if ($('#useCoins')) $('#useCoins').onchange = (e) => {
-    const off = e.target.checked ? Math.min(S.coins.bal, Math.floor((total + ship) * COIN_MAX_SHARE)) : 0;
+    const off = e.target.checked ? Math.min(S.coins.bal, Math.floor((total + ship) * COIN_MAX_SHARE), COIN_MAX_RUPEES) : 0;
     view().querySelector('.tot-row.big b').textContent = rupees(total + ship - off);
     if (d.payments) $('#payBtn').textContent = `Pay ${rupees(total + ship - off)}`;
   };
   $('#co').addEventListener('input', () => { S.ship = Object.fromEntries(new FormData($('#co')).entries()); save('ship'); });
   $('#payBtn').onclick = async () => {
     const f = $('#co'); if (!f.reportValidity()) return;
-    const coinsUsed = $('#useCoins') && $('#useCoins').checked ? Math.min(S.coins.bal, Math.floor((total + ship) * COIN_MAX_SHARE)) : 0;
+    const coinsUsed = $('#useCoins') && $('#useCoins').checked ? Math.min(S.coins.bal, Math.floor((total + ship) * COIN_MAX_SHARE), COIN_MAX_RUPEES) : 0;
     try { await startPayment({ items: items.map((x) => ({ id: x.id, qty: x.qty })), coinsUsed, ship: Object.fromEntries(new FormData(f).entries()) }); }
     catch (e) { toast(e.message, 'bad'); }
   };
 }
-// ---- PAYMENT HOOK: Razorpay goes here (not built yet) ----
-// Plan, once the bank account is decided:
-//  1. netlify/functions/pay-order.mjs: read items from the request, price them from
-//     netlify/lib/shop.mjs (never trust the browser), create a Razorpay order with the
-//     RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET environment variables, save it in Blobs.
-//  2. Here: load https://checkout.razorpay.com/v1/checkout.js and open Razorpay Checkout
-//     with the order id that step 1 returns.
-//  3. netlify/functions/pay-verify.mjs: check the payment signature (HMAC-SHA256 with the
-//     key secret), mark the order paid, then clear S.cart and show the order confirmation.
-//     On success: addCoins(-order.coinsUsed, 'Used on order'); addCoins(round(itemsTotal * COIN_BACK), 'Order cashback').
-//  4. Set PAYMENTS_LIVE = true in netlify/functions/shop.mjs to switch the Pay button on.
-async function startPayment(order) { // eslint-disable-line no-unused-vars
-  throw new Error('Online payment is not live yet.');
+// ---- Shop payment (Razorpay). Prices are set by the server, see netlify/lib/pay.mjs ----
+async function startPayment(order) {
+  const btn = $('#payBtn'), label = btn.innerHTML;
+  btn.disabled = true;
+  try {
+    const r = await payNow(API, { kind: 'shop', items: order.items, coins: order.coinsUsed, ship: order.ship }, {
+      onStage: (st) => { btn.innerHTML = st === 'preparing' ? '<span class="spin"></span> Getting ready…' : st === 'verifying' ? '<span class="spin"></span> Confirming payment…' : label; },
+    });
+    if (r.coins) addCoins(-r.coins, 'Used on order ' + r.no);
+    const back = Math.round((r.itemsPaise / 100) * COIN_BACK);
+    if (back) addCoins(back, 'Cashback on order ' + r.no);
+    S.cart = []; save('cart');
+    S.orders = [{ no: r.no, at: Date.now(), totalPaise: r.totalPaise, lines: r.lines, test: !!r.test }, ...(S.orders || [])].slice(0, 20); save('orders');
+    location.hash = '#/shop';
+    celebrate({ art: ['apple', 'phone', 'carrot'], title: 'Order placed! 🎉', text: `Payment received${r.test ? ' (test mode)' : ''}. Your order number is <b>${esc(r.no)}</b>.${back ? `<br>You earned <b>${back} SmartBite Coins</b>.` : ''}<br>We will call you to confirm delivery.`, cta: 'Keep shopping' });
+  } catch (e) {
+    btn.innerHTML = label; btn.disabled = false;
+    if (e.cancelled) oops(e.message); else toast(e.message, 'bad');
+  }
+}
+// A little product bubble flies into the cart button.
+function flyToCart(fromEl) {
+  try {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.motion === 'off') return;
+    const to = $('.cart-chip'); if (!fromEl || !to) return;
+    const a = fromEl.getBoundingClientRect(), b = to.getBoundingClientRect();
+    const dot = document.createElement('span'); dot.className = 'fly-dot'; dot.textContent = '🛍️';
+    dot.style.left = a.left + a.width / 2 - 18 + 'px'; dot.style.top = a.top - 10 + 'px';
+    document.body.appendChild(dot);
+    dot.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${(b.left - a.left - a.width / 2 + b.width / 2) / 2}px, ${b.top - a.top - 120}px) scale(1.3)`, opacity: 1, offset: 0.5 }, { transform: `translate(${b.left - a.left - a.width / 2 + b.width / 2}px, ${b.top - a.top + 10}px) scale(.4)`, opacity: .2 }], { duration: 750, easing: 'cubic-bezier(.3,.7,.4,1)' }).onfinish = () => { dot.remove(); to.classList.remove('bump'); void to.offsetWidth; to.classList.add('bump'); };
+  } catch {}
 }
 
 // ---------------- Reviews ----------------
@@ -1795,6 +1818,7 @@ function screenProfile() {
       <a class="row" href="#/play"><span class="grow">🎮 Play &amp; Learn games</span>›</a>
       <a class="row" href="#/compare"><span class="grow">⚖️ Compare products</span>›</a>
       <a class="row" href="#/partner"><span class="grow">🤝 ${esc(t('partner'))}</span>›</a>
+      <a class="row" href="#/profile" data-orders><span class="grow">🧾 My orders</span>›</a>
       <a class="row" href="#/profile" data-tour><span class="grow">🧭 Take the tour</span>›</a>
       <a class="row" href="/about.html"><span class="grow">ℹ️ About SmartBite</span>›</a>
       <a class="row" href="/privacy.html"><span class="grow">🔒 Privacy policy</span>›</a>
@@ -1826,23 +1850,96 @@ function screenProfile() {
 function upsell(blocked) {
   return modal(`<div style="font-size:44px">🚀</div><h2>${blocked ? "You've used today's free AI scans" : 'Loving SmartBite?'}</h2><p>Unlock unlimited thali and packet photo scans, personalised verdicts and weekly reports with <b>SmartBite Pro</b>.</p><div class="btnrow"><button class="btn-ghost" data-close>${blocked ? 'Maybe later' : 'Continue free'}</button><a class="btn hot" href="#/plans" data-close>See plans</a></div><p class="muted small" style="margin-top:10px">Barcode scans and search stay free.</p>`);
 }
-function screenPlans() {
-  const plans = [
-    { id: 'free', name: 'Free', price: '₹0', per: 'forever', f: ['Unlimited barcode scans and search', '5 AI photo scans a day', 'Adult and child verdicts', 'Healthier swaps'] },
-    { id: 'pro', cls: 'hot', name: 'Pro', price: '₹99', per: '/month', tag: 'Most popular', f: ['Unlimited packet and thali AI scans', 'Personalised for diabetes, BP, pregnancy', 'Compare up to 3 products', 'Weekly health report', 'No sponsored cards'] },
-    { id: 'family', cls: 'fam', name: 'Family', price: '₹149', per: '/month', f: ['Everything in Pro', 'Up to 5 profiles incl. kids', 'Kid-safe shopping mode', 'Shared family tracker'] },
-  ];
+const PLAN_INFO = {
+  free: { name: 'Free', price: 0, art: ['apple'], f: ['Unlimited barcode scans and search', '5 AI photo scans a day', 'Adult and child verdicts', 'Healthier desi swaps'] },
+  pro: { name: 'Pro', price: 99, art: ['phone', 'star'], tag: 'Most popular', f: ['Unlimited packet and thali AI scans', 'Personalised for diabetes, BP, pregnancy', 'Compare up to 3 products', 'Weekly health report', 'No sponsored cards'] },
+  family: { name: 'Family', price: 149, art: ['apple', 'carrot'], f: ['Everything in Pro', 'Up to 5 profiles incl. kids', 'Kid-safe shopping mode', 'Shared family tracker'] },
+};
+const TRIAL_DAYS = 7;
+const fmtDate = (ms) => new Date(ms).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+function setPlan(plan, until, extra = {}) {
+  S.plan = plan; save('plan');
+  S.planInfo = plan === 'free' ? null : { plan, until, ...extra }; save('planInfo');
+}
+// A paid plan or trial ends by itself on its last day.
+function checkPlanExpiry() {
+  if (S.plan !== 'free' && S.planInfo && S.planInfo.until && Date.now() > S.planInfo.until) {
+    const was = PLAN_INFO[S.plan] ? PLAN_INFO[S.plan].name : 'Premium';
+    setPlan('free');
+    setTimeout(() => toast(`Your ${was} ${S.planInfo && S.planInfo.trial ? 'trial' : 'plan'} has ended. You are on Free now.`), 900);
+  }
+}
+function celebrate({ art = ['apple', 'phone', 'carrot'], title, text, cta = 'Yay!', href = '' }) {
+  const w = modal(`<div class="cele">
+      <div class="cele-art">${art.map((a, i) => `<span class="cele-m m${i}">${ART[a] || ''}</span>`).join('')}</div>
+      <h2>${title}</h2><p>${text}</p>
+      ${href ? `<a class="btn hot wide fun-btn" href="${href}" data-close>${cta}</a>` : `<button class="btn hot wide fun-btn" data-close>${cta}</button>`}
+    </div>`);
+  w.classList.add('cele-wrap');
+  confetti('star');
+  return w;
+}
+function oops(text) {
+  modal(`<div class="cele oops"><div class="cele-art"><span class="cele-m m0">${ART.chips}</span></div><h2>No worries!</h2><p>${esc(text)}</p><button class="btn wide" data-close>Okay</button></div>`);
+}
+async function screenPlans() {
+  let d = { payments: false, test: false };
+  try { d = await shopData(); } catch {}
+  const app = isAndroidApp();
+  const trialUsed = store.get('trialUsed', false);
+  const active = (id) => S.plan === id && S.planInfo && S.planInfo.until > Date.now();
+  const button = (id) => {
+    const p = PLAN_INFO[id];
+    if (id === 'free') return S.plan === 'free' ? '<button class="btn-ghost wide" disabled>✓ Your current plan</button>' : '<button class="btn wide" data-plan="free">Switch to Free</button>';
+    if (active(id)) {
+      const status = `<button class="btn-ghost wide" disabled>✓ ${S.planInfo.trial ? 'Free trial' : 'Active'} until ${fmtDate(S.planInfo.until)}</button>`;
+      return S.planInfo.trial && d.payments && !app ? status + `<button class="btn hot wide fun-btn" data-buy="${id}"><span>Keep ${p.name} · ${rupees(p.price)}</span></button>` : status;
+    }
+    const trial = !trialUsed && S.plan === 'free' ? `<button class="${d.payments && !app ? 'linkish' : 'btn hot wide fun-btn'}" data-trial="${id}">${d.payments && !app ? `or try it free for ${TRIAL_DAYS} days` : `🎁 Start ${TRIAL_DAYS}-day free trial`}</button>` : '';
+    if (d.payments && !app) return `<button class="btn hot wide fun-btn" data-buy="${id}"><span>Get ${p.name} · ${rupees(p.price)}</span></button>${id === 'pro' ? '<span class="tap-hint" aria-hidden="true">👆 Tap here!</span>' : ''}${trial}`;
+    if (trial) return trial + (id === 'pro' ? '<span class="tap-hint" aria-hidden="true">👆 Tap here!</span>' : '');
+    return `<button class="btn-ghost wide" disabled>${app ? 'Coming soon to the Android app' : 'Payments opening soon'}</button>`;
+  };
   view().innerHTML = `
     <header class="bar"><a href="#/profile" class="back" aria-label="Back">‹</a><h2>${esc(t('plans'))}</h2><span style="width:40px"></span></header>
-    <div class="page-title"><p>Scan the packet, the plate and the market, not just barcodes.</p></div>
-    <div class="stagger">${plans.map((p) => `<div class="card plan ${p.cls || ''} ${S.plan === p.id ? 'cur' : ''}">${p.tag ? `<span class="tag">${p.tag}</span>` : ''}<div class="pl-head"><span>${p.name}</span><span><b class="price">${p.price}</b> <small>${p.per}</small></span></div><ul>${p.f.map((x) => `<li>✓ ${esc(x)}</li>`).join('')}</ul>${S.plan === p.id ? '<button class="btn-ghost wide" disabled>Current plan</button>' : `<button class="btn wide" data-plan="${p.id}">${p.id === 'free' ? 'Switch to Free' : 'Subscribe'}</button>`}</div>`).join('')}</div>
-    `;
-  view().querySelectorAll('[data-plan]').forEach((b) => (b.onclick = () => {
-    const id = b.dataset.plan;
-    if (id === 'free') { S.plan = 'free'; save('plan'); screenPlans(); return; }
-    modal(`<div style="font-size:44px">🎉</div><h2>${id === 'pro' ? 'Pro' : 'Family'} unlocked</h2><p>Every feature is now open on this phone. Enjoy!</p><button class="btn wide" data-close>Start scanning</button>`);
-    confetti('star');
-    S.plan = id; save('plan'); screenPlans();
+    <section class="plans-hero">
+      <span class="ph-m ph-a">${ART.phone}</span><span class="ph-m ph-b">${ART.star}</span><span class="ph-m ph-c">${ART.apple}</span>
+      <h1>Level up your<br><em>food powers!</em></h1>
+      <p>Scan the packet, the plate and the market, not just barcodes.</p>
+      ${d.test ? '<span class="test-badge">TEST MODE · no real money</span>' : ''}
+    </section>
+    <div class="plan-list">${['free', 'pro', 'family'].map((id, i) => { const p = PLAN_INFO[id]; return `
+      <article class="plan-card pc-${id} ${S.plan === id ? 'cur' : ''}" style="--i:${i}">
+        ${p.tag ? `<span class="pc-tag">⭐ ${p.tag}</span>` : ''}
+        <div class="pc-top"><div class="pc-art">${p.art.map((a, k) => `<span class="pc-m m${k}">${ART[a]}</span>`).join('')}</div>
+          <div><h3>${p.name}</h3><div class="pc-price">${p.price ? `<b>${rupees(p.price)}</b><small>for 30 days</small>` : '<b>₹0</b><small>forever</small>'}</div></div></div>
+        <ul>${p.f.map((x) => `<li><i aria-hidden="true">✓</i>${esc(x)}</li>`).join('')}</ul>
+        <div class="pc-cta">${button(id)}</div>
+      </article>`; }).join('')}</div>
+    <div class="trust-row">
+      <span>🔒 Secure payments by Razorpay</span><span>📱 UPI · Cards · Netbanking · Wallets</span><span>🙅 No auto-renewal. Pay only when you want.</span>
+    </div>
+    ${app ? '<p class="foot">Premium plans are not sold inside the Android app yet. You can try them free with the trial.</p>' : ''}`;
+  const v = view();
+  v.querySelectorAll('[data-plan="free"]').forEach((b) => (b.onclick = () => { setPlan('free'); toast('You are on the Free plan.'); screenPlans(); }));
+  v.querySelectorAll('[data-trial]').forEach((b) => (b.onclick = () => {
+    const id = b.dataset.trial, until = Date.now() + TRIAL_DAYS * 86400000;
+    store.set('trialUsed', true); setPlan(id, until, { trial: true });
+    celebrate({ art: PLAN_INFO[id].art.concat(['star']).slice(0, 3), title: `${PLAN_INFO[id].name} trial started! 🎉`, text: `Every ${PLAN_INFO[id].name} feature is open until <b>${fmtDate(until)}</b>. Have fun scanning!`, cta: 'Start scanning', href: '#/scan' });
+    screenPlans();
+  }));
+  v.querySelectorAll('[data-buy]').forEach((b) => (b.onclick = async () => {
+    const id = b.dataset.buy, label = b.innerHTML;
+    v.querySelectorAll('[data-buy],[data-trial]').forEach((x) => (x.disabled = true));
+    try {
+      const r = await payNow(API, { kind: 'plan', plan: id }, { onStage: (st) => { b.innerHTML = st === 'preparing' ? '<span class="spin"></span> Getting ready…' : st === 'verifying' ? '<span class="spin"></span> Confirming payment…' : label; } });
+      setPlan(r.plan, r.until, { token: r.token, no: r.no });
+      celebrate({ art: PLAN_INFO[r.plan].art.concat(['star']).slice(0, 3), title: `${PLAN_INFO[r.plan].name} unlocked! 🎉`, text: `Payment received${r.test ? ' (test mode)' : ''}. Order <b>${esc(r.no)}</b>.<br>All ${PLAN_INFO[r.plan].name} features are open until <b>${fmtDate(r.until)}</b>.`, cta: 'Start scanning', href: '#/scan' });
+      screenPlans();
+    } catch (e) {
+      b.innerHTML = label; v.querySelectorAll('[data-buy],[data-trial]').forEach((x) => (x.disabled = false));
+      if (e.cancelled) oops(e.message); else toast(e.message, 'bad');
+    }
   }));
 }
 
@@ -1911,7 +2008,7 @@ function screenPartner() {
 // Earn: welcome bonus + 5% back on every shop order (credited when online payment confirms the order).
 // Use: up to 20% of an order's value. Stored on this phone for this user; when payments go live the
 // server must check the balance before applying a discount.
-const WELCOME_COINS = 50, COIN_BACK = 0.05, COIN_MAX_SHARE = 0.2;
+const WELCOME_COINS = 50, COIN_BACK = 0.05, COIN_MAX_SHARE = 0.2, COIN_MAX_RUPEES = 100; // must match netlify/lib/pay.mjs
 function addCoins(n, why) {
   n = Math.round(n); if (!n) return;
   S.coins.bal = Math.max(0, S.coins.bal + n);
@@ -1963,7 +2060,7 @@ function screenLogin() {
     // Every login starts fresh: nothing from an earlier person carries over.
     try { Object.keys(localStorage).filter((k) => k.startsWith('sb_')).forEach((k) => localStorage.removeItem(k)); } catch {}
     try { sessionStorage.clear(); } catch {}
-    Object.assign(S, { history: [], compare: [], tracker: [], custom: [], cart: [], ship: {}, days: [], plan: 'free', aiCount: { day: today(), n: 0 } });
+    Object.assign(S, { history: [], compare: [], tracker: [], custom: [], cart: [], ship: {}, days: [], plan: 'free', planInfo: null, aiCount: { day: today(), n: 0 } });
     S.profile = { name: '', conditions: [], allergens: [], theme: 'auto', palette: 'masala', textSize: 'normal', motion: 'auto', name, age: (f && f.get('age')) || 'adult', diet: (f && f.get('diet')) || 'veg', lang: (f && f.get('lang')) || 'en' };
     S.session = { at: Date.now(), guest: !name };
     S.coins = { bal: 0, log: [] };
@@ -2085,11 +2182,24 @@ document.addEventListener('click', (e) => {
   if (bcEl) openBarcode(bcEl.dataset.bc);
   if (e.target.closest('[data-act=bitu]')) toggleChat(true);
 });
-document.addEventListener('click', (e) => { if (e.target.closest('[data-tour]')) { e.preventDefault(); startTour(); } });
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-tour]')) { e.preventDefault(); startTour(); }
+  if (e.target.closest('[data-orders]')) {
+    e.preventDefault();
+    const list = S.orders || [], pi = S.planInfo;
+    modal(`<h2>🧾 My orders</h2>
+      ${pi && pi.until > Date.now() ? `<div class="ord-row"><b>${esc(PLAN_INFO[pi.plan] ? PLAN_INFO[pi.plan].name : pi.plan)} ${pi.trial ? 'free trial' : 'plan'}</b><small>${pi.no ? esc(pi.no) + ' · ' : ''}active until ${fmtDate(pi.until)}</small></div>` : ''}
+      ${list.length ? list.map((o) => `<div class="ord-row"><b>${esc(o.no)}${o.test ? ' <em>test</em>' : ''} · ${rupees(o.totalPaise / 100)}</b><small>${new Date(o.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · ${(o.lines || []).map((l) => esc(l.name) + ' × ' + l.qty).join(', ')}</small></div>`).join('')
+        : (pi && pi.until > Date.now() ? '' : '<p class="muted">No orders yet. Healthy products from partner brands will appear in the Shop.</p>')}
+      <p class="muted small">Questions about an order? Email <a href="mailto:rupaligurav15@gmail.com">rupaligurav15@gmail.com</a> with your order number.</p>
+      <button class="btn wide" data-close>Close</button>`);
+  }
+});
 window.addEventListener('hashchange', () => { route(); if (CHAT.open) renderChat(); });
 applyTheme();
 setInterval(() => { if (S.profile.theme === 'auto') applyTheme(); }, 60000);
 mountChat();
+checkPlanExpiry();
 route();
 if (S.session && !store.get('toured', false)) setTimeout(startTour, 1200);
 

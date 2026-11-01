@@ -148,3 +148,4 @@ export function openTour({ lang = 'en', onGo = () => {}, onClose = () => {} } = 
   show(0);
   requestAnimationFrame(() => { root.classList.add('in'); next.focus(); });
 }
+export { ART };
