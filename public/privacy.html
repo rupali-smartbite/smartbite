@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy · SmartBite</title>
+<meta name="description" content="How SmartBite handles your data: what stays on your phone, what is sent for analysis, and your choices.">
+<meta name="theme-color" content="#5B2A86">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Mukta:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .ab { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .ab-hero { background: linear-gradient(135deg, #5B2A86, #8E3FC9); color: #fff; border-radius: 0 0 28px 28px; padding: 28px 20px 30px; margin: 0 -16px 8px; }
+  .ab-hero img { width: 56px; height: 56px; }
+  .ab-hero h1 { font-size: 34px; margin: 8px 0 4px; }
+  .ab-hero p { opacity: .92; font-size: 17px; }
+  .ab-hero .ab-cta { display: inline-block; margin-top: 14px; background: #FFB703; color: #241433; font-weight: 800; padding: 10px 18px; border-radius: 99px; }
+  .ab h2 { margin: 28px 0 10px; color: var(--jamun); }
+  .ab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .ab-grid .card { margin: 0; }
+  .ab-grid b { display: block; font: 800 26px var(--display); color: var(--jamun); }
+  .ab table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
+  .ab th, .ab td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .ab th { background: var(--soft); font-family: var(--display); }
+  .ab ol li, .ab ul li { margin: 6px 0; }
+  .ab .src { font-size: 13px; color: var(--muted); }
+  .ab footer { margin-top: 36px; text-align: center; color: var(--muted); font-size: 14px; }
+  .ab a { color: var(--jamun); font-weight: 700; }
+  .ab-hero a.ab-cta { color: #241433; }
+</style>
+</head>
+<body>
+<div class="ab">
+  <header class="ab-hero">
+    <img src="/logo.svg" alt="">
+    <h1>Privacy Policy</h1>
+    <p>SmartBite, the AI food health scanner. Last updated: 1 November 2026.</p>
+  </header>
+
+  <p>SmartBite is a free food health scanner built as an Atal Tinkering Lab student project. It works without an account, shows no ads and does not track you. This page explains, in plain words, what happens to your information.</p>
+
+  <h2>1. What stays on your phone</h2>
+  <p>Your profile (name or nickname, age group, food preference, language, health goals and allergies), your scan history, tracker, saved items, coins and app settings are stored <b>only in your phone's browser storage</b>. We do not upload them to our servers. Clearing the app's data, or tapping <b>Profile → Log out</b> (which clears everything SmartBite saved on this phone), removes them.</p>
+
+  <h2>2. What is sent when you use a feature</h2>
+  <table>
+    <tr><th>Feature</th><th>What is sent</th><th>Kept?</th></tr>
+    <tr><td>Barcode scan</td><td>The barcode number, to look up the product in our database and Open Food Facts.</td><td>No</td></tr>
+    <tr><td>Packet, label or plate photo</td><td>The photo, sent securely to our server and to Anthropic's Claude AI to read the label or estimate the food.</td><td>No. Photos are analysed and not stored by SmartBite.</td></tr>
+    <tr><td>Ask Bitu (chat)</td><td>Your message, recent chat turns and the basic profile needed for a safe answer (age group, diet, health conditions, allergies), sent to Claude AI.</td><td>No. The chat is kept only on your phone for the current session.</td></tr>
+    <tr><td>Reviews</td><td>The name you choose to show, your rating and comment.</td><td>Yes, shown publicly as a review.</td></tr>
+    <tr><td>Partner with SmartBite form (brands)</td><td>Company name, contact name, email, phone, budget and message.</td><td>Yes, so we can reply.</td></tr>
+  </table>
+
+  <h2>3. Camera</h2>
+  <p>The camera is used only when you choose to scan a barcode or take a photo. Barcode scanning happens on your phone. Nothing is recorded in the background.</p>
+
+  <h2>4. Children</h2>
+  <p>SmartBite is designed to be safe for families and school children. It needs no account, collects no contact details from users, shows no ads and has no in-app chat with other people. We ask children to use it with a parent or teacher. Verdicts and Bitu's answers are general food information, not medical advice.</p>
+
+  <h2>5. Service providers</h2>
+  <ul>
+    <li><b>Netlify</b> hosts the app and runs our server functions.</li>
+    <li><b>Anthropic (Claude AI)</b> analyses photos and powers Bitu. Under Anthropic's commercial terms, data sent through its API is not used to train its models.</li>
+    <li><b>Open Food Facts</b> is the open product database we look barcodes up in.</li>
+  </ul>
+  <p>To prevent abuse, our server keeps short-lived anonymous counters (a scrambled code, not your IP address) to limit how many requests one visitor can make.</p>
+
+  <h2>6. We never</h2>
+  <ul>
+    <li>sell or share your data for advertising</li>
+    <li>use trackers or third-party analytics</li>
+    <li>ask for your location, contacts or files</li>
+  </ul>
+
+  <h2>7. Your choices</h2>
+  <p>You can use SmartBite without giving a real name, delete your on-phone data at any time, and ask us to remove a review or enquiry you sent by emailing us.</p>
+
+  <h2>8. Contact</h2>
+  <p>Questions or requests: <a href="mailto:rupaligurav15@gmail.com">rupaligurav15@gmail.com</a></p>
+
+  <footer>
+    <p><a href="/">Open SmartBite</a> · <a href="/about.html">About the project</a></p>
+  </footer>
+</div>
+</body>
+</html>

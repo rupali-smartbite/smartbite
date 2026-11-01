@@ -46,7 +46,14 @@ async function openBarcode(bc) {
   const local = allProducts().find((p) => p.barcode === bc && p.ing && p.ing.length);
   if (local) return showProduct(local, local.src || 'Our database');
   const done = showAnalysing('packet', 'Fetching product…');
-  try { const { product } = await apiGet('/products/' + encodeURIComponent(bc)); showProduct(product, 'Open Food Facts'); }
+  try {
+    const { product } = await apiGet('/products/' + encodeURIComponent(bc));
+    // Same product, same verdict: if this barcode is a product we verified by hand,
+    // use our checked numbers, exactly as a photo scan of the same pack would.
+    const mine = fuzzyFind(PRODUCTS, product.brand, product.name);
+    if (mine) { if (!mine.barcode) mine.barcode = bc; return showProduct(mine, mine.src || 'Our database'); }
+    showProduct(product, 'Open Food Facts');
+  }
   catch (e) { toast(e.status === 404 ? 'Not in any food database yet. Take a photo of the packet.' : e.message, 'bad'); if (e.status === 404) location.hash = '#/scan/packet'; }
   finally { done(); }
 }
@@ -1439,15 +1446,16 @@ async function runPacket(shots) {
   const q = `${id.name || ''} ${id.variant || ''}`;
   const db = fuzzyFind(PRODUCTS, id.brand, q) || fuzzyFind(S.custom.filter((p) => !String(p.id).startsWith('ai-') && !p.approx), id.brand, q);
   if (db) return showProduct(db, db.src || 'Our database');
-  // 2. Numbers read from a clear photo of the back of the pack, if they make sense
-  if (shots.back && res.readFromPack && ai.per100 && plausible(ai.per100, !!ai.isDrink)) return showProduct(fromAI(false), 'Read from your pack');
-  // 3. Open Food Facts, Indian packs preferred (recipes differ between countries)
+  // 2. Open Food Facts, the same source a barcode scan uses, so both scans agree.
+  //    Indian packs preferred (recipes differ between countries).
   try {
     const r = await apiGet('/products?q=' + encodeURIComponent(`${id.brand || ''} ${id.name || ''}`.trim()));
     const items = [...r.items.filter((x) => x.india), ...r.items.filter((x) => !x.india)];
     const hit = fuzzyFind(items, id.brand, q) || (items.length && id.confidence !== 'low' && items.find((x) => x.india && (x.brand || '').toLowerCase().includes(String(id.brand || '').toLowerCase().slice(0, 4))));
     if (hit) return openBarcode(hit.barcode);
   } catch {}
+  // 3. Numbers read from a clear photo of the back of the pack, if they make sense
+  if (shots.back && res.readFromPack && ai.per100 && plausible(ai.per100, !!ai.isDrink)) return showProduct(fromAI(false), 'Read from your pack');
   // 4. Last resort: AI estimate, clearly marked
   if (shots.back && res.readFromPack && ai.per100) return showProduct(fromAI(true), 'Read from your pack (some values unclear, check the pack)');
   if (ai.per100) return showProduct(fromAI(true), 'AI estimate, verify with pack');
@@ -1779,6 +1787,7 @@ function screenProfile() {
       <a class="row" href="#/compare"><span class="grow">⚖️ Compare products</span>›</a>
       <a class="row" href="#/partner"><span class="grow">🤝 ${esc(t('partner'))}</span>›</a>
       <a class="row" href="/about.html"><span class="grow">ℹ️ About SmartBite</span>›</a>
+      <a class="row" href="/privacy.html"><span class="grow">🔒 Privacy policy</span>›</a>
       <button class="row danger" id="reset"><span class="grow">🗑 Clear my history and tracker</span></button>
       <button class="row danger" id="logout"><span class="grow">🚪 Log out and clear this phone</span></button>
     </div>

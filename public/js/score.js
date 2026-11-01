@@ -215,9 +215,9 @@ export function swaps(p, all, profile) {
 
 // Fuzzy match for AI-identified names. Never matches across sugar-free/diet variants
 // (Sprite vs Sprite Zero), and prefers Indian-market products.
-const VARIANT = /\b(zero|diet|sugar ?free|no added sugar|lite|light|unsweetened)\b/;
+const VARIANT = /\b(zero|diet|sugar ?free|no added sugar|lite|light|unsweetened|atta|oats|multigrain)\b/;
 export function fuzzyFind(all, brand = '', name = '') {
-  const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\b\d+(?:\.\d+)?\s*(?:g|gm|gms|kg|ml|l|ltr|rs|pc|pcs)\b/g, ' ').replace(/\s+/g, ' ').trim();
   const qb = norm(brand), qn = norm(name);
   const qVar = (`${qb} ${qn}`.match(VARIANT) || [''])[0];
   const qWords = new Set(`${qb} ${qn}`.split(' ').filter((w) => w.length > 2 && !['the', 'and', 'style', 'flavour', 'flavor', 'wafers', 'chips'].includes(w)));
@@ -226,6 +226,11 @@ export function fuzzyFind(all, brand = '', name = '') {
     const pb = norm(p.brand), pn = norm(p.name);
     if (((`${pb} ${pn}`.match(VARIANT) || [''])[0]) !== qVar) continue;
     const words = new Set(`${pb} ${pn}`.split(' ').filter((w) => w.length > 2));
+    // The product name must match too, not just the brand (Coca-Cola "Sprite" is not Coca-Cola).
+    const nameWords = qn.split(' ').filter((w) => w.length > 2 && !qb.split(' ').includes(w) && !['the', 'and', 'style', 'flavour', 'flavor', 'wafers', 'chips', 'drink', 'pack'].includes(w));
+    if (nameWords.length && nameWords.filter((w) => words.has(w)).length / nameWords.length < 0.6) continue;
+    // Name is only the brand plus a letter (e.g. "Parle-G"): the product name must contain it.
+    if (!nameWords.length && qn && !pn.replace(/ /g, '').includes(qn.replace(/ /g, ''))) continue;
     let hit = 0; qWords.forEach((w) => { if (words.has(w)) hit++; });
     let sc = hit / Math.max(1, qWords.size);
     if (qb && (pb.includes(qb.split(' ')[0]) || qb.includes(pb.split(' ')[0]))) sc += 0.3;
