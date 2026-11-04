@@ -371,7 +371,9 @@ legend { font: 700 15px var(--display); margin-bottom: 8px; }
 .ck { flex-direction: row !important; align-items: center; gap: 0 !important; cursor: pointer; }
 .ck input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .ck span { padding: 8px 14px; border-radius: 99px; font: 600 14.5px var(--body); text-transform: capitalize; background: var(--soft); transition: background .2s, color .2s, transform .2s; }
-.ck input:checked + span { background: var(--jamun); color: #fff; transform: scale(1.04); }
+.ck input:checked + span { background: var(--jamun); color: #fff; }
+.ck input:checked + span::before { content: '✓ '; }
+.ck input[type=radio]:checked + span { box-shadow: 0 0 0 2px var(--haldi, #FFC93C); }
 .ck input:focus-visible + span { outline: 3px solid var(--haldi); }
 .switch span { text-transform: none; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -1422,3 +1424,7 @@ body.tour-open { overflow: hidden; }
 .offline-ok { margin: 0 16px 10px; padding: 8px 12px; border-radius: 14px; background: #DFF5E8; color: #0B6B3A; font-weight: 700; font-size: 14px; }
 .offline-ok span { font-weight: 500; }
 .offline-ok.off { background: #FFF2D6; color: #8a5a00; }
+.modepick .ck input:checked + span::before { content: none; }
+.fam-add .checks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 6px; }
+.fam-add .fam-lbl { margin: 14px 0 6px; font-weight: 700; }
+.fam-add > label { margin-bottom: 4px; }
