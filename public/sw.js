@@ -1,7 +1,7 @@
 // SmartBite service worker: lets the app install on phones and open even with a weak connection.
 // Pages and code are always fetched fresh first (so updates show at once), with the saved copy
 // used only when offline. API answers and personal data are never cached.
-const CACHE = 'smartbite-v40';
+const CACHE = 'smartbite-v41';
 const SHELL = ['/', '/index.html', '/styles.css', '/js/app.js', '/js/data.js', '/js/india-db.js', '/js/score.js', '/js/i18n.js', '/js/validate.js', '/js/tour.js', '/js/pay.js', '/img/thali.svg', '/logo.svg', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 // The barcode scanner library (pinned version) is kept too, so barcode scanning works offline.
