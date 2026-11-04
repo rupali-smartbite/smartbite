@@ -1466,3 +1466,4 @@ body.tour-open { overflow: hidden; }
 .rp-row b.err { color: var(--bad, #E63946); } .rp-row b.ok { color: var(--good, #1FA463); }
 .rp-locked { position: relative; max-height: 220px; overflow: hidden; filter: blur(5px); pointer-events: none; user-select: none; }
 .rp-unlock { border: 2px solid var(--haldi, #FFC93C); }
+.tf-chip small { font-weight: 700; opacity: .75; }

@@ -2377,7 +2377,7 @@ function screenTiffin() {
     <div class="tf-list">${p.days.map((d, k) => `<article class="card tf-day ${k === todayK ? 'tf-today' : ''}">
       <div class="tf-top"><b class="tf-dname">${TIFFIN_DAYS[k]}${k === todayK ? ' · Today' : ''}</b><button class="btn-ghost sm" data-tfswap="${k}" aria-label="Change ${TIFFIN_DAYS[k]}'s tiffin">↻ Change</button></div>
       <h4>${esc(TIFFINS[d.m][0])}</h4><p class="muted small">${esc(TIFFINS[d.m][1])}</p>
-      <div class="tf-chips"><span class="tf-chip fruit">🍎 ${esc(TIFFIN_SIDES[d.s])}</span><span class="tf-chip snack">🥜 ${esc(TIFFIN_SNACKS[d.n])}</span></div></article>`).join('')}</div>
+      <div class="tf-chips"><span class="tf-chip fruit">🍎 <small>Fruit:</small> ${esc(TIFFIN_SIDES[d.s])}</span><span class="tf-chip snack">🥜 <small>Short break:</small> ${esc(TIFFIN_SNACKS[d.n])}</span></div></article>`).join('')}</div>
     <div class="btnrow"><button class="btn-ghost" id="tfNew">🔀 New week plan</button><button class="btn" id="tfShare">💬 Share on WhatsApp</button></div>
     <p class="foot">Pack water, not juice or soft drinks. Keep fried snacks and sweets for special days.</p>`;
   view().querySelectorAll('[data-tfswap]').forEach((b) => (b.onclick = () => {
