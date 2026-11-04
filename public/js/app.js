@@ -2146,7 +2146,7 @@ function familyCard(p) {
     const R = scoreFor(p, m.who === 'child' ? 'child' : 'adult', { conditions: m.conditions || [], allergens: m.allergens || [] });
     const hit = algs.filter((a) => (m.allergens || []).includes(a));
     const worst = [...R.breakdown].sort((a, b) => a.delta - b.delta)[0];
-    const note = hit.length ? `⚠️ Contains ${hit.join(', ')}` : worst && worst.delta < 0 ? worst.label : 'Nothing to worry about';
+    const note = hit.length ? `⚠️ Contains ${hit.join(', ')}` : verdictKey(R.verdict) === 'good' ? 'Good choice 👍' : worst && worst.delta < 0 ? worst.label : 'Okay in small amounts';
     const vk = hit.length ? 'avoid' : verdictKey(R.verdict);
     return `<div class="fam-row"><span class="fam-av">${FAM_ICON[m.who] || '🙂'}</span><span class="grow"><b>${esc(m.name)}</b><small class="${hit.length ? 'err' : 'muted'}">${esc(note)}</small></span><span class="pill v-${vk}">${esc(hit.length ? t('avoid') : t(vk))}</span></div>`;
   }).join('');
