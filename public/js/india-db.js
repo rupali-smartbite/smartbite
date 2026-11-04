@@ -14,6 +14,7 @@
 
 const D = (o) => ({ veg: true, allergens: [], ing: [], approx: false, verified: true, src: 'SmartBite verified (India pack)', ...o });
 const n = (kcal, fat, sat, carbs, sugar, fibre, protein, sodium) => ({ kcal, fat, sat, carbs, sugar, fibre, protein, sodium });
+const X = (o) => D({ src: 'Cross-checked: Indian packs agree', ...o });
 
 export const INDIA = [
   // ---------- Cold drinks ----------
@@ -73,4 +74,46 @@ export const INDIA = [
   // ---------- Dairy ----------
   D({ id: 'in-amul-cheese-slices', brand: 'Amul', name: 'Cheese Slices', cat: 'Dairy', barcode: '8901262020015', packG: 200, nova: 4, allergens: ['milk'], n: n(311, 25, 16, 1.5, 1.5, 0, 20, 1200) }),
   D({ id: 'in-epigamia-mishti-doi', brand: 'Epigamia', name: 'Mishti Doi', cat: 'Dairy', barcode: '8906059638329', packG: 80, nova: 3, allergens: ['milk'], n: n(136, 5, 3.75, 17.5, 17.5, 0, 5, 79) }),
+
+  // ---------- Added Nov 2026: cross-checked (2 or more separate Indian packs on Open Food Facts agree) ----------
+  X({ id: 'in-lays-cream-onion', brand: "Lay's", name: 'American Style Cream & Onion', cat: 'Chips', barcode: '8901491502030', alt: ['8901491001120'], packG: 50, nova: 4, allergens: ['milk', 'soy'], n: n(537, 33.1, 14.9, 53, 3.4, null, 6.7, 643) }),
+  X({ id: 'in-lays-chile-limon', brand: "Lay's", name: 'Chile Limon', cat: 'Chips', barcode: '8901491981552', alt: ['8901491981538'], packG: 50, nova: 4, n: n(535, 33.1, 14.8, 52, 3, 0, 6.5, 984) }),
+  X({ id: 'in-lays-west-indies', brand: "Lay's", name: "West Indies' Hot 'n' Sweet Chilli", cat: 'Chips', barcode: '8901491502054', alt: ['8901491003124', '8901491503051', '8901491504782'], packG: 50, nova: 4, n: n(534, 32, 13.7, 55.1, 6, 0, 6.4, 671) }),
+  X({ id: 'in-balaji-shing-bhujia', brand: 'Balaji', name: 'Shing Bhujia', cat: 'Snacks', barcode: '8906010500276', alt: ['8906010500290'], packG: 50, nova: 3, allergens: ['peanut'], n: n(640, 47.4, 12, 26.5, 2, null, 20.3, 798) }),
+  X({ id: 'in-sunfeast-marie-light', brand: 'Sunfeast', name: 'Marie Light', cat: 'Biscuits', barcode: '8901725114862', alt: ['8901725114961', '8901725015435', '8901725013042'], packG: 100, nova: 4, allergens: ['gluten', 'milk'], n: n(445, 11, 5.6, 77.4, 21.3, null, 9.1, 292) }),
+  X({ id: 'in-britannia-little-hearts', brand: 'Britannia', name: 'Little Hearts', cat: 'Biscuits', barcode: '8901063019027', alt: ['8901063019171'], packG: 75, nova: 4, allergens: ['gluten', 'milk', 'soy'], n: n(486, 19.5, 9.4, 70, 24.2, 0, 7.4, 310) }),
+  X({ id: 'in-britannia-gobbles', brand: 'Britannia', name: 'Gobbles Cake', cat: 'Bakery', barcode: '8901063365384', alt: ['8901063363786'], packG: 35, nova: 4, veg: false, allergens: ['egg', 'gluten'], n: n(416, 17.7, 8.8, 58.3, 27, null, 6, 169) }),
+  X({ id: 'in-britannia-toastea', brand: 'Britannia', name: 'Toastea Premium Rusk', cat: 'Biscuits', barcode: '8901063325784', alt: ['8901063325609'], packG: 100, nova: 4, allergens: ['gluten', 'milk', 'soy'], n: n(432.5, 8.2, 3.8, 80.4, 22, 0, 9, 218) }),
+  X({ id: 'in-unibic-fruit-nut', brand: 'Unibic', name: 'Fruit & Nut Cookies', cat: 'Biscuits', barcode: '8906009077017', alt: ['8906009078670'], packG: 75, nova: 4, allergens: ['gluten', 'milk', 'tree nuts', 'soy'], n: n(458, 20, 9, 63, 25, null, 6.4, 209) }),
+  X({ id: 'in-chings-hakka', brand: "Ching's Secret", name: 'Veg Hakka Noodles', cat: 'Instant food', barcode: '8901595853403', alt: ['8901595851218'], packG: 150, nova: 4, allergens: ['gluten'], n: n(373, 1, 0, 79.3, 0, 0, 12.3, 487) }),
+  X({ id: 'in-horlicks-chocolate', brand: 'Horlicks', name: 'Chocolate Health Drink', cat: 'Drinks', barcode: '8901030978579', alt: ['8901030986307'], packG: 27, nova: 4, allergens: ['gluten', 'milk', 'soy'], n: n(365, 2, 1.4, 78, 32, 2.3, 10, 350) }),
+  X({ id: 'in-amul-masti-dahi', brand: 'Amul', name: 'Masti Dahi', cat: 'Dairy', barcode: '8901262200622', alt: ['8901262200677'], packG: 400, nova: 3, allergens: ['milk'], n: n(65, 3.1, 2, 4.6, 4.6, null, 4, 50) }),
+  X({ id: 'in-nandini-toned', brand: 'Nandini', name: 'Toned Milk', cat: 'Dairy', drink: true, barcode: '8906036675750', alt: ['15486196', '8906036670014'], packG: 500, nova: 1, allergens: ['milk'], n: n(60, 3.1, 2, 4.8, 4.8, null, 3.3, 50) }),
+  X({ id: 'in-mother-dairy-super-t', brand: 'Mother Dairy', name: 'Super-T Toned Milk', cat: 'Dairy', drink: true, barcode: '8901648922827', alt: ['8901648923138'], packG: 500, nova: 1, allergens: ['milk'], n: n(57.5, 3.1, 2.2, 4.8, 4.8, null, 3.1, 55) }),
+  X({ id: 'in-aashirvaad-rava', brand: 'Aashirvaad', name: 'Bansi Rava (Sooji)', cat: 'Staples', barcode: '8901725001087', alt: ['8901725001094'], packG: 500, nova: 1, allergens: ['gluten'], n: n(372, 1.1, 0.2, 76.4, 1.7, null, 11.1, 2) }),
+  X({ id: 'in-saffola-soya-chunks', brand: 'Saffola', name: 'Soya Chunks', cat: 'Staples', barcode: '8901088072267', alt: ['8901088884174'], packG: 200, nova: 1, allergens: ['soy'], n: n(312, 1, 0.3, 30.2, 2.9, 15.5, 53, 441) }),
 ];
+
+// Corrections found by the Nov 2026 cross-check: two or more separate Indian packs agreed on
+// numbers different from ours, so ours were out of date or wrong. Applied by product id.
+export const CHECKED = {
+  'horlicks-classic': { n: n(377, 2, 1.4, 79, 46, null, 11, 400), alt: ['8901030976179', '8901030993398'] },
+  'amul-butter': { n: n(719, 79.3, 49, 0, 0, 0, 0.5, 888), alt: ['8901262010016', '8901262010023'] },
+  'yippee-magic-masala': { n: n(459.5, 20.1, 10.7, 62.6, 3, null, 9, 1257), alt: ['8901725116736', '8901725116729'] },
+  'in-dark-fantasy': { n: n(513, 26.5, 12.8, 63.8, 35.1, 2.8, 5.9, 175), alt: ['8901725101381', '8901725015879', '8901725136215'] },
+  'in-milk-bikis': { n: n(471, 17.9, 8.8, 72, 23.3, 5.3, 8.3, 287), alt: ['8901063012622', '8901063012660'] },
+  // Same numbers as ours (confirmed); these barcodes now open the product straight away.
+  'frooti': { alt: ['8902579103415', '8902579000370', '8902579103057', '8902579103170', '8902579104016', '8902579105013', '8902579100025'] },
+  'in-appy-fizz': { alt: ['8902579002442'] },
+  'amul-taaza': { alt: ['8901262150064', '8901262150217'] },
+  'mother-dairy-dahi': { alt: ['8901648018186', '8901648026167'] },
+  'in-amul-lassi': { alt: ['8901262151696', '8901262200189'] },
+  'marie-gold': { alt: ['8901063162426', '8901063023901', '8901063162648'] },
+  'thums-up': { alt: ['8901764042805', '8901764042300', '8901764041259'] },
+  'in-kissan-jam': { alt: ['8901030831690', '8901030922787'] },
+  'kissan-ketchup': { alt: ['8901030667756', '8901030532832', '8901030865237'] },
+  'in-perk': { alt: ['8901233030272', '7622201758639'] },
+  'dairy-milk': { alt: ['8901233030548', '7622202398698'] },
+  'in-munch': { alt: ['89009802', '8901058000702'] },
+  'in-uncle-chipps': { alt: ['8901491003155', '8901491435000'] },
+};

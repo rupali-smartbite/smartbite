@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SmartBite Admin</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Mukta:wght@400;500;600;700&display=swap">
+<style>
+  :root { --ink: #241034; --muted: #6B5A78; --jamun: #5B2A86; --haldi: #FFC93C; --kesar: #FB8500; --pudina: #1FA463; --mirchi: #E63946; --bg: #F6F1FB; --card: #fff; --line: #E6DDF0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Mukta, system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  h1, h2, h3, .num { font-family: "Baloo 2", Mukta, sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  header.top { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--jamun); color: #fff; }
+  header.top img { width: 34px; height: 34px; border-radius: 9px; }
+  header.top h1 { font-size: 22px; margin: 0; flex: 1; }
+  header.top button { background: rgba(255,255,255,.15); color: #fff; border: 0; border-radius: 99px; padding: 6px 14px; font: 600 14px Mukta, system-ui, sans-serif; cursor: pointer; }
+  .login { max-width: 380px; margin: 12vh auto; background: #fff; border: 3px solid var(--ink); border-radius: 24px; box-shadow: 6px 6px 0 var(--ink); padding: 26px; text-align: center; }
+  .login img { width: 60px; } .login h2 { margin: 6px 0 4px; }
+  .login input { width: 100%; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; font: 500 16px Mukta, system-ui, sans-serif; margin: 14px 0 10px; }
+  .btn { background: var(--jamun); color: #fff; border: 0; border-radius: 99px; padding: 11px 20px; font: 700 15px Mukta, system-ui, sans-serif; cursor: pointer; }
+  .btn.sm { padding: 5px 12px; font-size: 13px; } .btn.danger { background: var(--mirchi); } .btn.ghost { background: #EEE6F7; color: var(--jamun); }
+  .err { color: var(--mirchi); font-weight: 600; min-height: 22px; }
+  nav.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
+  nav.tabs button { border: 2px solid var(--line); background: #fff; border-radius: 99px; padding: 7px 16px; font: 700 14px Mukta, system-ui, sans-serif; color: var(--muted); cursor: pointer; }
+  nav.tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; }
+  .stat .num { font-size: 32px; font-weight: 800; line-height: 1; color: var(--jamun); }
+  .stat small { color: var(--muted); font-weight: 600; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin: 14px 0; overflow-x: auto; }
+  .card h3 { margin: 0 0 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .stars { color: var(--kesar); white-space: nowrap; }
+  .pill { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 700; }
+  .pill.paid { background: #DFF5E8; color: var(--pudina); } .pill.created { background: #FFF2D6; color: #9a6400; } .pill.failed { background: #FDE2E4; color: var(--mirchi); } .pill.test { background: #EEE6F7; color: var(--jamun); }
+  .bars { display: flex; align-items: flex-end; gap: 4px; height: 160px; padding-top: 8px; }
+  .bars div { flex: 1; background: var(--haldi); border-radius: 6px 6px 0 0; position: relative; min-height: 2px; }
+  .bars div:hover::after { content: attr(data-t); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; font-size: 12px; padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
+  .axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .hbar { display: grid; grid-template-columns: 110px 1fr 50px; gap: 8px; align-items: center; margin: 5px 0; font-size: 14px; }
+  .hbar i { display: block; height: 12px; border-radius: 99px; background: var(--jamun); }
+  .muted { color: var(--muted); } .note { font-size: 13px; color: var(--muted); }
+  .empty { color: var(--muted); padding: 10px 0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="/js/admin.js"></script>
+</body>
+</html>

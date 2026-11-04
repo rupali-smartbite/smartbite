@@ -2,7 +2,7 @@
 // "approx: true" means typical values — verify with the pack.
 // Exact values sourced from Open Food Facts India / Balaji website where noted.
 
-import { INDIA } from './india-db.js';
+import { INDIA, CHECKED } from './india-db.js';
 
 const P = (o) => ({ veg: true, allergens: [], approx: true, barcode: '', packG: 50, drink: false, ...o });
 
@@ -145,6 +145,13 @@ export const PRODUCTS = [
   // ---------- More Indian brands, verified Indian pack values (see india-db.js) ----------
   ...INDIA,
 ];
+// Apply cross-check corrections and extra barcodes (see CHECKED in india-db.js).
+for (const p of PRODUCTS) {
+  const c = CHECKED[p.id];
+  if (!c) continue;
+  if (c.n) Object.assign(p, { n: { ...c.n }, approx: false, verified: true, src: 'Cross-checked: Indian packs agree' });
+  if (c.alt) p.alt = [...new Set([...(p.alt || []), ...c.alt])];
+}
 
 // ---------- Fresh / cooked reference (per serving) ----------
 export const FRESH = [

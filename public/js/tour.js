@@ -98,13 +98,16 @@ export function openTour({ lang = 'en', onGo = () => {}, onClose = () => {} } = 
     </div>`;
   document.body.appendChild(root);
   document.body.classList.add('tour-open');
+  const card = root.querySelector('.tour-card');
+  card.addEventListener('scroll', () => { if (card.scrollLeft) card.scrollLeft = 0; });
   const track = root.querySelector('.tour-track'), slides = [...root.querySelectorAll('.tour-slide')], dots = [...root.querySelectorAll('.tour-dots i')];
   const next = root.querySelector('.tour-next'), back = root.querySelector('.tour-back'), count = root.querySelector('.tour-count');
   let i = 0;
   const show = (n) => {
     i = Math.max(0, Math.min(SLIDES.length - 1, n));
     track.style.transform = `translateX(${-i * 100}%)`;
-    slides.forEach((s, k) => { s.setAttribute('aria-hidden', k === i ? 'false' : 'true'); s.classList.toggle('on', k === i); });
+    slides.forEach((s, k) => { s.setAttribute('aria-hidden', k === i ? 'false' : 'true'); s.classList.toggle('on', k === i); s.inert = k !== i; });
+    card.scrollLeft = 0; track.scrollLeft = 0; // never let focus or the browser nudge the slides sideways
     dots.forEach((d, k) => d.classList.toggle('on', k === i));
     back.style.visibility = i ? 'visible' : 'hidden';
     next.textContent = i === SLIDES.length - 1 ? tx.done : tx.next;

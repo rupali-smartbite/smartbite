@@ -6,5 +6,7 @@ export function getStore({ name }) {
     async get(k, o) { const v = m.get(k); return v === undefined ? null : (o && o.type === 'json' ? JSON.parse(v) : v); },
     async setJSON(k, v) { m.set(k, JSON.stringify(v)); },
     async set(k, v) { m.set(k, v); },
+    async delete(k) { m.delete(k); },
+    async list(o = {}) { return { blobs: [...m.keys()].filter((k) => !o.prefix || k.startsWith(o.prefix)).map((key) => ({ key })) }; },
   };
 }

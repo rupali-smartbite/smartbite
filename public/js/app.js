@@ -47,7 +47,7 @@ async function apiGet(path) {
   return j;
 }
 async function openBarcode(bc) {
-  const local = allProducts().find((p) => p.barcode === bc && p.ing && p.ing.length);
+  const local = allProducts().find((p) => (p.barcode === bc || (p.alt && p.alt.includes(bc))) && ((p.ing && p.ing.length) || p.verified));
   if (local) return showProduct(local, local.src || 'Our database');
   const done = showAnalysing('packet', 'Fetching product…');
   try {
@@ -129,6 +129,25 @@ const VCOLOR = { good: '#20B26B', okay: '#FB8500', avoid: '#E63946' };
 const AV_COLORS = ['#5B2A86', '#E63946', '#FB8500', '#20B26B', '#2F80ED', '#FF5D8F'];
 
 // ---------------- UI helpers ----------------
+// Anonymous usage counts for the owner's admin panel (see netlify/functions/ping.mjs).
+// No name, no id, no IP stored: only "+1" on today's counters.
+function ping(e, extra = {}) {
+  try { fetch(API + '/ping', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ e, ...extra }) }).catch(() => {}); } catch {}
+}
+const USAGE = { start: Date.now() };
+function usageOpen() {
+  try {
+    const today = new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10);
+    if (localStorage.getItem('smartbite_last_open') === today) return;
+    const first = !localStorage.getItem('smartbite_seen');
+    localStorage.setItem('smartbite_last_open', today); localStorage.setItem('smartbite_seen', '1');
+    ping('open', { first });
+  } catch {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { const mins = (Date.now() - USAGE.start) / 60000; if (mins >= 0.5) ping('time', { mins: Math.max(1, Math.round(mins)) }); }
+  else USAGE.start = Date.now();
+});
 // Feature tour: shown once after sign-in, and any time from Profile
 function startTour() {
   openTour({
@@ -836,7 +855,10 @@ const MEALS = {
   ],
 };
 { let n = 0; for (const k of ['breakfast', 'lunch', 'dinner']) for (const m of MEALS[k]) { m.fi = n++; m.ti = n++; } }
-const mealImg = (i) => `${API}/asset/meal-${i}`;
+// Real food photos from Unsplash (free licence), chosen and checked by hand for each dish.
+// Anything not listed here still uses the app's own image store.
+const MEAL_PHOTOS = {"0":"1683533743190-89c9b19f9ea6","1":"1676976198292-8cb7e28e7a5a","2":"1646579933415-92109f9805df","3":"1668283653825-37b80f055b05","4":"1651002488658-631108f38b08","5":"1630409346824-4f0e7b080087","6":"1605719161691-5d9771fc144f","7":"1632104667384-06f58cb7ad44","8":"1768204039907-77a974159ef0","9":"1670710029403-607db8eeec83","10":"1728508707623-56d3dca51187","11":"1668236543090-82eba5ee5976","12":"1591465619339-60fce055bc82","13":"1789991184412-c29c9dfa2b39","14":"1682263167429-0dbcf2c1e127","15":"1617611647086-bccca8c2cf84","16":"1612929633738-8fe44f7ec841","17":"1630409349197-b733a524b24e","18":"1743517894265-c86ab035adef","19":"1708146464361-5c5ce4f9abb6","20":"1544787219-7f47ccb76574","21":"1702648982253-8b851013e81f","22":"1687630433865-f86f07be989a","23":"1583552336796-531290f1fe2a","24":"1601050690597-df0568f70950","25":"1714799263291-272975db795a","26":"1769030905851-c0e0a4fe5c51","27":"1683533761804-5fc12be0f684","28":"1788602564560-9bcbf0f9acb6","29":"1736680056470-948527554276","30":"1772730065344-4cf131b39951","31":"1617692855027-33b14f061079","32":"1565299624946-b28f40a0ae38","33":"1668236534990-73c4ed23043c","34":"1631452180539-96aca7d48617","35":"1589647363585-f4a7d3877b10","36":"1771268494481-cc301a1b7505","37":"1661588669110-81142a5b9e57","38":"1755090154817-58d9d36ec988","39":"1626500154744-e4b394ffea16","40":"1792143663878-974883a5c9b7","41":"1742281257687-092746ad6021","42":"1589302168068-964664d93dc0","43":"1620894580123-466ad3a0ca06","44":"1753357303396-704b5abe8945","45":"1680359873197-c3eb21ec05c0","46":"1668357530437-72a12c660f94","47":"1600935926387-12d9b03066f0","48":"1579208030886-b937da0925dc","49":"1602694241790-52a8a88d5d5c","50":"1768215610440-fcb9631c7ee2","51":"1679735107918-15112296e28d","52":"1708782342203-2c1b8ffaf8cd","53":"1652545296893-ff9227b3512e","54":"1789990662414-f607ba6405f3","55":"1789992252165-28c05878c442","56":"1710508774177-7ac2f3492675","57":"1736239092568-21614c4b783f","58":"1570549986390-6bd150ac3515","59":"1630409349416-24884761a307","60":"1708782342102-ee13e9ac16f4","61":"1777613112774-1a64a2c2d337","62":"1664717698774-84f62382613b","63":"1764315197254-94385571df22","64":"1631452180519-c014fe946bc7","65":"1666001120694-3ebe8fd207be","66":"1767114915965-7abe87d7c7d8","67":"1603105037880-880cd4edfb0d","68":"1775717430472-bac0b07e90e3","69":"1555939594-58d7cb561ad1","70":"1690401767645-595de0e0e5f8","71":"1736239093375-34f0a2f33c7d","72":"1768252688649-13d169feadc0","73":"1622732777601-e744c3401d44","74":"1766556403793-04cd52cbf678","75":"1574484284002-952d92456975","76":"1619535860434-ba1d8fa12536","77":"1626500155537-93690c24099e","78":"1751618646882-4221d5e3b1c2","79":"1708146646005-30597857a7c9","80":"1764018292116-003fd7d1a0ba","81":"1759689975472-c302b63b3b71","82":"1513104890138-7c749659a591","83":"1596797038530-2c107229654b","100":"1760997707695-f0b5527e5de9","101":"1515543904379-3d757afe72e4","102":"1739065883242-92659253f7a6","103":"1710421576768-ff985fa63b60","104":"1675081678327-25a9b6448977","105":"1653850280260-aa3b9e00b230","106":"1772729996007-40bad08b3c40","107":"1714799263291-272975db795a","108":"1760625142154-0d899eacedb7","109":"1676976198284-e94a1de93e96","110":"1623660053975-cf75a8be0908","111":"1648288718348-4b6d53755716","112":"1593701461250-d7b22dfd3a77","113":"1531917658462-73450543c9f0","114":"1778448806852-db6a837fa98f","115":"1691657917109-c6e027eac44a","116":"1708782343574-b9d0dc6dd112","117":"1726771517475-e7acdd34cd8a","118":"1714799263412-2e0c1f875959","119":"1530259152377-3a014e1092e0","120":"1497034825429-c343d7c6a68f","121":"1782149461714-0b033e08c15f","122":"1602663491496-73f07481dbea","123":"1730815048561-45df6f7f331d","124":"1581636625402-29b2a704ef13","125":"1548694617-99f44b6ecf3a","126":"1650292390827-51240d74eb0a","127":"1610832958506-aa56368176cf","128":"1696739696228-eee49592ff07","129":"1537191072641-5e19cc173c6a","130":"1572490122747-3968b75cc699","131":"1707219811295-0f283760668b","132":"1685967836529-b0e8d6938227","133":"1630409346699-79481a79db52","134":"1612927601601-6638404737ce","135":"1630409349197-b733a524b24e","136":"1627754468549-6ed1a4813a53","137":"1626700051175-6818013e1d4f","138":"1521483451569-e33803c0330c","139":"1555078604-b2379f0e964a","140":"1568901346375-23c9450c58cd","141":"1533621975016-7c373cdf0a3c","142":"1708793873401-e8c6c153b76a","143":"1736680056463-8b5e0fd9357e"};
+const mealImg = (i) => (MEAL_PHOTOS[i] ? `https://images.unsplash.com/photo-${MEAL_PHOTOS[i]}?w=640&q=70&auto=format&fit=crop` : `${API}/asset/meal-${i}`);
 const MEAL_SLOTS = [['breakfast', '🌅', 'Breakfast'], ['lunch', '☀️', 'Lunch'], ['dinner', '🌙', 'Dinner']];
 const DIETS = [['veg', 'Veg'], ['egg', 'Egg'], ['nonveg', 'Non-veg']];
 const dietMark = (d) => `<i class="fmark ${d}" title="${d === 'veg' ? 'Vegetarian' : d === 'egg' ? 'Contains egg' : 'Non-vegetarian'}"></i>`;
@@ -1226,7 +1248,7 @@ async function startPayment(order) {
   btn.disabled = true;
   try {
     const r = await payNow(API, { kind: 'shop', items: order.items, coins: order.coinsUsed, ship: order.ship }, {
-      onStage: (st) => { btn.innerHTML = st === 'preparing' ? '<span class="spin"></span> Getting ready…' : st === 'verifying' ? '<span class="spin"></span> Confirming payment…' : label; },
+      onStage: (st) => { payFun(st, 'shop'); btn.innerHTML = st === 'preparing' ? '<span class="spin"></span> Getting ready…' : st === 'verifying' ? '<span class="spin"></span> Confirming payment…' : label; },
     });
     if (r.coins) addCoins(-r.coins, 'Used on order ' + r.no);
     const back = Math.round((r.itemsPaise / 100) * COIN_BACK);
@@ -1236,7 +1258,7 @@ async function startPayment(order) {
     location.hash = '#/shop';
     celebrate({ art: ['apple', 'phone', 'carrot'], title: 'Order placed! 🎉', text: `Payment received${r.test ? ' (test mode)' : ''}. Your order number is <b>${esc(r.no)}</b>.${back ? `<br>You earned <b>${back} SmartBite Coins</b>.` : ''}<br>We will call you to confirm delivery.`, cta: 'Keep shopping' });
   } catch (e) {
-    btn.innerHTML = label; btn.disabled = false;
+    payFun('off'); btn.innerHTML = label; btn.disabled = false;
     if (e.cancelled) oops(e.message); else toast(e.message, 'bad');
   }
 }
@@ -1439,7 +1461,7 @@ function shot(slot, label, req, img) {
 
 async function lookupBarcode(bc) {
   bc = String(bc).trim();
-  const local = allProducts().find((p) => p.barcode === bc);
+  const local = allProducts().find((p) => p.barcode === bc || (p.alt && p.alt.includes(bc)));
   if (local) return showProduct(local, local.src || 'Our database');
   return openBarcode(bc);
 }
@@ -1869,6 +1891,25 @@ function checkPlanExpiry() {
     setTimeout(() => toast(`Your ${was} ${S.planInfo && S.planInfo.trial ? 'trial' : 'plan'} has ended. You are on Free now.`), 900);
   }
 }
+// Cartoon "please wait" moment while an order is prepared or a payment is confirmed.
+function payFun(stage, kind = 'shop') {
+  let el = document.getElementById('payFun');
+  if (stage === 'paying' || stage === 'done' || stage === 'off') { if (el) { el.classList.add('out'); setTimeout(() => el.remove(), 250); } return; }
+  const txt = stage === 'preparing'
+    ? (kind === 'shop' ? ['Packing your healthy goodies…', 'Getting the payment ready'] : ['Powering up your plan…', 'Getting the payment ready'])
+    : ['Checking your payment…', 'Almost there, please don’t close the app'];
+  if (!el) {
+    el = document.createElement('div'); el.id = 'payFun'; el.className = 'payfun'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+    el.innerHTML = `<div class="pf-card"><div class="pf-stage"><span class="pf-road"></span>
+        <span class="pf-m pf-a">${ART.apple}</span><span class="pf-m pf-b">${ART.carrot}</span>
+        <span class="pf-bag">🛍️</span><span class="pf-coin c1">🪙</span><span class="pf-coin c2">🪙</span><span class="pf-coin c3">🪙</span></div>
+      <b class="pf-t"></b><small class="pf-s"></small><div class="pf-dots"><i></i><i></i><i></i></div></div>`;
+    document.body.appendChild(el);
+  }
+  el.querySelector('.pf-t').textContent = txt[0];
+  el.querySelector('.pf-s').textContent = txt[1];
+  el.classList.toggle('verify', stage === 'verifying');
+}
 function celebrate({ art = ['apple', 'phone', 'carrot'], title, text, cta = 'Yay!', href = '' }) {
   const w = modal(`<div class="cele">
       <div class="cele-art">${art.map((a, i) => `<span class="cele-m m${i}">${ART[a] || ''}</span>`).join('')}</div>
@@ -1932,12 +1973,12 @@ async function screenPlans() {
     const id = b.dataset.buy, label = b.innerHTML;
     v.querySelectorAll('[data-buy],[data-trial]').forEach((x) => (x.disabled = true));
     try {
-      const r = await payNow(API, { kind: 'plan', plan: id }, { onStage: (st) => { b.innerHTML = st === 'preparing' ? '<span class="spin"></span> Getting ready…' : st === 'verifying' ? '<span class="spin"></span> Confirming payment…' : label; } });
+      const r = await payNow(API, { kind: 'plan', plan: id }, { onStage: (st) => { payFun(st, 'plan'); b.innerHTML = st === 'preparing' ? '<span class="spin"></span> Getting ready…' : st === 'verifying' ? '<span class="spin"></span> Confirming payment…' : label; } });
       setPlan(r.plan, r.until, { token: r.token, no: r.no });
       celebrate({ art: PLAN_INFO[r.plan].art.concat(['star']).slice(0, 3), title: `${PLAN_INFO[r.plan].name} unlocked! 🎉`, text: `Payment received${r.test ? ' (test mode)' : ''}. Order <b>${esc(r.no)}</b>.<br>All ${PLAN_INFO[r.plan].name} features are open until <b>${fmtDate(r.until)}</b>.`, cta: 'Start scanning', href: '#/scan' });
       screenPlans();
     } catch (e) {
-      b.innerHTML = label; v.querySelectorAll('[data-buy],[data-trial]').forEach((x) => (x.disabled = false));
+      payFun('off'); b.innerHTML = label; v.querySelectorAll('[data-buy],[data-trial]').forEach((x) => (x.disabled = false));
       if (e.cancelled) oops(e.message); else toast(e.message, 'bad');
     }
   }));
@@ -2069,7 +2110,7 @@ function screenLogin() {
     document.body.classList.remove('pre-login'); applyTheme();
     location.hash = '#/home'; route();
     toast(`${WELCOME_COINS} SmartBite Coins added. Welcome${name ? ', ' + name : ''}!`);
-    setTimeout(startTour, 700);
+    setTimeout(startTour, 700); usageOpen();
   };
   $('#lgf').onsubmit = (e) => { e.preventDefault(); const f = new FormData(e.target); start(String(f.get('name') || '').trim().slice(0, 40), f); };
   $('#lgGuest').onclick = () => start('', null);
@@ -2094,6 +2135,7 @@ async function route() {
   markActive();
   const navKey = { coins: 'home', dish: 'home', shop: 'shop', cart: 'shop', checkout: 'shop', game: 'home', play: 'home', quiz: 'home', sugar: 'home', swaps: 'swapday', home: 'home', scan: 'scan', result: 'scan', plate: 'scan', label: 'scan', compare: 'explore', explore: 'explore', reviews: 'home', tracker: 'tracker', profile: 'profile', plans: 'profile', partner: 'home' }[page] || 'home';
   renderNav(navKey);
+  ping('view', { page });
   window.scrollTo(0, 0);
   ({ home: screenHome, game: screenGame, play: screenPlayHub, quiz: screenQuiz, sugar: screenSugar, swaps: screenSwaps, explore: screenExplore, coins: screenCoins, dish: () => screenDish(arg), shop: () => screenShop(arg), cart: screenCart, checkout: screenCheckout, reviews: screenHome, scan: () => screenScan(arg), result: screenResult, plate: screenPlate, label: screenLabel, compare: screenCompare, tracker: screenTracker, profile: screenProfile, plans: screenPlans, partner: screenPartner }[page] || screenHome)();
   const v = view(); v.classList.remove('view-enter'); void v.offsetWidth; v.classList.add('view-enter');
@@ -2163,7 +2205,7 @@ function renderChat() {
 }
 async function sendChat(text) {
   if (CHAT.busy) return;
-  CHAT.msgs.push({ role: 'user', content: text.slice(0, 500) });
+  CHAT.msgs.push({ role: 'user', content: text.slice(0, 500) }); ping('chat');
   CHAT.busy = true; renderChat();
   try {
     const cp = chatProduct();
@@ -2200,6 +2242,7 @@ applyTheme();
 setInterval(() => { if (S.profile.theme === 'auto') applyTheme(); }, 60000);
 mountChat();
 checkPlanExpiry();
+if (S.session) usageOpen();
 route();
 if (S.session && !store.get('toured', false)) setTimeout(startTour, 1200);
 
