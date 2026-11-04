@@ -1467,3 +1467,5 @@ body.tour-open { overflow: hidden; }
 .rp-locked { position: relative; max-height: 220px; overflow: hidden; filter: blur(5px); pointer-events: none; user-select: none; }
 .rp-unlock { border: 2px solid var(--haldi, #FFC93C); }
 .tf-chip small { font-weight: 700; opacity: .75; }
+.tf-day { padding-top: 0; overflow: hidden; }
+.tf-img { display: block; width: calc(100% + 32px); margin: 0 -16px 12px; height: 150px; object-fit: cover; background: var(--soft); }

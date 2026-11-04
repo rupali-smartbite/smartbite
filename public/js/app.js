@@ -2350,6 +2350,17 @@ const TIFFIN_SNACKS = ['Roasted chana', 'Roasted makhana', 'A small handful of p
 const TIFFIN_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const weekNum = () => Math.floor((dayNum() + 3) / 7);
 function seeded(n) { let x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); }
+
+// Photo for each tiffin (same order as TIFFINS): a dish name from MEALS (reuses its hand-checked photo) or an Unsplash photo id.
+const TIFFIN_PHOTO = ['Kanda poha', 'Methi thepla with curd', '=1683533743190-89c9b19f9ea6', 'Pesarattu (moong dosa)', 'Vegetable upma', 'Idli sambar', 'Ragi dosa', 'Besan chilla with curd',
+  'Vegetable pulao with raita', 'Chana masala with roti', 'Sprouts salad with corn', 'Paneer bhurji with roti', '=1633383718081-22ac93e3db65', 'Steamed dhokla', '=1733414717545-1d7031befbcf', 'Ragi dosa',
+  'Moong dal khichdi', '=1683533743190-89c9b19f9ea6', 'Jowar roti', '=1528735602780-2552fd46c7af', 'Oats upma', 'Egg bhurji with whole-wheat roti', 'Two boiled eggs', 'Masala omelette with veggies and roti'];
+function tiffinImg(i) {
+  const k = TIFFIN_PHOTO[i] || '';
+  if (k.startsWith('=')) return `https://images.unsplash.com/photo-${k.slice(1)}?w=480&q=70&auto=format&fit=crop`;
+  for (const slot of ['breakfast', 'lunch', 'dinner']) { const m = MEALS[slot].find((x) => x.to === k); if (m) return mealImg(m.ti); }
+  return pic('thali');
+}
 function tiffinPool() {
   const d = S.profile.diet;
   return TIFFINS.map((x, i) => ({ i, t: x[2] })).filter(({ t }) => (d === 'jain' ? t.includes('j') : d === 'egg' || d === 'nonveg' ? true : !t.includes('e'))).map((x) => x.i);
@@ -2374,7 +2385,7 @@ function screenTiffin() {
   view().innerHTML = `
     <header class="bar"><a href="#/home" class="back" aria-label="Back">‹</a><h2>Tiffin planner</h2><span style="width:40px"></span></header>
     <section class="card tf-hero"><span class="tf-art" aria-hidden="true">🍱</span><div><h3>This week's healthy tiffins</h3><p class="muted small">A filling main, a fruit and a short-break snack for every school day. ${S.profile.diet === 'jain' ? 'Jain-friendly picks only.' : S.profile.diet === 'egg' || S.profile.diet === 'nonveg' ? 'Includes some egg options.' : 'All vegetarian.'}</p></div></section>
-    <div class="tf-list">${p.days.map((d, k) => `<article class="card tf-day ${k === todayK ? 'tf-today' : ''}">
+    <div class="tf-list">${p.days.map((d, k) => `<article class="card tf-day ${k === todayK ? 'tf-today' : ''}"><img class="tf-img" src="${esc(tiffinImg(d.m))}" alt="${esc(TIFFINS[d.m][0])}" loading="lazy">
       <div class="tf-top"><b class="tf-dname">${TIFFIN_DAYS[k]}${k === todayK ? ' · Today' : ''}</b><button class="btn-ghost sm" data-tfswap="${k}" aria-label="Change ${TIFFIN_DAYS[k]}'s tiffin">↻ Change</button></div>
       <h4>${esc(TIFFINS[d.m][0])}</h4><p class="muted small">${esc(TIFFINS[d.m][1])}</p>
       <div class="tf-chips"><span class="tf-chip fruit">🍎 <small>Fruit:</small> ${esc(TIFFIN_SIDES[d.s])}</span><span class="tf-chip snack">🥜 <small>Short break:</small> ${esc(TIFFIN_SNACKS[d.n])}</span></div></article>`).join('')}</div>
