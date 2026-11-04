@@ -477,6 +477,8 @@ function screenHome() {
 
     <button class="howto" type="button" data-tour>${ART.phone ? `<span class="howto-art" aria-hidden="true">${ART.phone}</span>` : ''}<span class="grow"><b>${S.profile.lang === 'hi' ? 'SmartBite कैसे काम करता है' : S.profile.lang === 'mr' ? 'SmartBite कसं काम करतं' : 'How SmartBite works'}</b><small>${S.profile.lang === 'hi' ? '1 मिनट का टूर · 7 आसान स्टेप' : S.profile.lang === 'mr' ? '1 मिनिटाची टूर · 7 सोप्या पायऱ्या' : '1-minute tour · 7 easy steps'}</small></span><span class="howto-go">▶</span></button>
 
+    <a class="tf-cta" href="#/tiffin"><span class="tf-cta-ic" aria-hidden="true">🍱</span><span class="grow"><b>This week's tiffin plan</b><small>6 healthy desi school tiffins, ready to share</small></span><span aria-hidden="true">›</span></a>
+
     <nav class="marquee" aria-label="Popular dishes"><div class="marquee-track">${[...mq, ...mq].map(([img, l, c], i) => `<a class="mq" href="#/dish/${img}" style="background:${c}" ${i >= mq.length ? 'tabindex="-1" aria-hidden="true"' : ''}><img src="${pic(img)}" alt="">${l}</a>`).join('')}</div></nav>
 
     <div class="card aaj">
@@ -1425,6 +1427,10 @@ function screenScan(mode) {
   const cam = $('#camBtn');
   if (cam) {
     const start = async () => {
+      try {
+        const nat = await nativeScanner($('#reader'), async (code) => { qr = null; lookupBarcode(code); });
+        if (nat) { qr = nat; $('#reader').classList.add('fast'); cam.textContent = t('stopCam'); cam.onclick = async () => { await stopCam(); screenScan('barcode'); }; return; }
+      } catch {}
       if (!window.Html5Qrcode) { toast('Scanner is still loading. Try again in a second.'); return; }
       try {
         const F = window.Html5QrcodeSupportedFormats;
@@ -1820,7 +1826,7 @@ function screenTracker() {
     <section class="card">${bar('⚡ Energy', sum('kcal'), targets.kcal, 'kcal', '#FB8500')}${bar('🍬 Sugar', sum('sugar'), targets.sugar, 'g', '#FF5D8F')}${bar('🧂 Sodium', sum('sodium'), targets.sodium, 'mg', '#2F80ED')}${bar('💪 Protein', sum('protein'), targets.protein, 'g', '#20B26B')}<p class="muted small">Targets for ${kid ? 'a child' : 'an adult'}. Change the age group in Profile.</p></section>
     <section class="card"><h3>This week</h3><div class="week">${days.map((x) => `<div class="wcol"><i style="height:${Math.round((x.kcal / maxK) * 100)}%" class="${x.kcal > targets.kcal ? 'over' : ''}"></i><small>${esc(x.lab)}</small></div>`).join('')}</div></section>
     <section><div class="sec-head"><h3>Today</h3></div>${e.length ? `<div class="list stagger">${e.slice().reverse().map((x) => `<div class="row"><span class="score-pill v-${x.score >= 3.75 ? 'good' : x.score >= 2.5 ? 'okay' : 'avoid'}">${(+x.score).toFixed(1)}</span><span class="grow"><b>${esc(x.title)}</b><br><small class="muted">${Math.round(x.kcal)} kcal · ${r1(x.sugar)} g sugar · ${Math.round(x.sodium)} mg sodium</small></span><button class="x" data-del="${x.at}" aria-label="Remove">✕</button></div>`).join('')}</div>` : `<div class="card empty"><span class="big-emoji">🍽️</span><p class="muted">Nothing logged today. Scan something and tap “Add to tracker”.</p></div>`}</section>
-    ${S.plan === 'free' ? `<a class="card upsell" href="#/plans"><b>📈 Weekly health report</b><p>Get a weekly summary and smart tips with SmartBite Pro.</p></a>` : `<div class="card"><h3>Weekly report</h3><p>${days.filter((x) => x.kcal > 0).length} active days this week · average ${Math.round(days.reduce((s, x) => s + x.kcal, 0) / Math.max(1, days.filter((x) => x.kcal > 0).length))} kcal/day. ${days.some((x) => x.kcal > targets.kcal) ? 'Some days went over your energy target. Try fruit or roasted chana instead of chips.' : 'You stayed within your energy target.'}</p></div>`}`;
+    <a class="card rp-link" href="#/report"><span class="rp-ic">📈</span><span class="grow"><b>Your weekly health report</b><small>Scans, best picks, foods to swap and a tip for next week</small></span>›</a>`;
   view().querySelectorAll('[data-del]').forEach((b) => (b.onclick = () => { S.tracker = S.tracker.filter((x) => String(x.at) !== b.dataset.del); save('tracker'); screenTracker(); }));
   animateRings(view());
 }
@@ -1854,6 +1860,8 @@ function screenProfile() {
     <form id="pf" class="card form pf-pane">${panes[PF.tab]}</form>
     <div class="card pf-links">
       <a class="row" href="#/plans"><span class="grow">⭐ ${esc(t('plans'))}</span>›</a>
+      <a class="row" href="#/tiffin"><span class="grow">🍱 Tiffin planner</span>›</a>
+      <a class="row" href="#/report"><span class="grow">📈 Weekly health report</span>›</a>
       <a class="row" href="#/coins"><span class="grow">🪙 SmartBite Coins</span><b>${S.coins.bal}</b>›</a>
       <a class="row" href="#/shop"><span class="grow">🛍 ${esc(t('shop'))}</span>›</a>
       <a class="row" href="#/play"><span class="grow">🎮 Play &amp; Learn games</span>›</a>
@@ -2309,6 +2317,171 @@ function screenAdd(bc) {
   };
 }
 
+// ---------------- Tiffin planner: a week of healthy desi school tiffins ----------------
+// [main, why, tags] tags: v = vegetarian, j = can be made Jain (no onion, garlic, root veg), e = has egg
+const TIFFINS = [
+  ['Vegetable poha with peanuts', 'Light, iron-rich and crunchy', 'v'],
+  ['Methi thepla with curd dip', 'Fibre from methi, calcium from curd', 'vj'],
+  ['Paneer paratha', 'Protein and calcium to stay full till lunch', 'vj'],
+  ['Moong dal chilla with green chutney', 'Lentil protein, not fried', 'vj'],
+  ['Vegetable upma', 'Warm, filling and quick to make', 'v'],
+  ['Idli with a small box of sambar', 'Steamed, light and easy to digest', 'v'],
+  ['Mini uttapam with tomato', 'Fermented batter and veggies on top', 'v'],
+  ['Besan chilla with grated veggies', 'Gram flour protein, easy to pack', 'vj'],
+  ['Vegetable pulao with raita', 'Rice, veggies and curd in one box', 'v'],
+  ['Chana chaat roti roll', 'Chickpea protein in a whole-wheat roll', 'v'],
+  ['Sprouts sandwich on whole-wheat bread', 'Sprouts give protein and vitamins', 'v'],
+  ['Paneer bhurji roll', 'High protein, kids love it', 'vj'],
+  ['Curd rice with pomegranate', 'Cool and gentle on hot days', 'vj'],
+  ['Khaman dhokla', 'Steamed, not fried, light and spongy', 'vj'],
+  ['Lemon rice with peanuts', 'Tangy, keeps well till lunch', 'vj'],
+  ['Ragi dosa', 'Ragi is rich in calcium', 'vj'],
+  ['Vegetable dalia', 'Broken wheat: slow energy, lots of fibre', 'v'],
+  ['Palak paratha', 'Iron and greens hidden in a paratha', 'vj'],
+  ['Jowar roti wrap with paneer', 'Millet roti with protein filling', 'vj'],
+  ['Corn and capsicum sandwich', 'Colourful veggies in whole-wheat bread', 'vj'],
+  ['Masala oats with veggies', 'Whole grain and fibre', 'v'],
+  ['Egg bhurji roll', 'Egg protein in a whole-wheat roti', 'e'],
+  ['Boiled egg and veg sandwich', 'Protein that keeps kids full', 'e'],
+  ['Egg and veggie omelette roll', 'Quick, filling, packed with protein', 'e'],
+];
+const TIFFIN_SIDES = ['Apple slices', 'Banana', 'Guava', 'Orange segments', 'Pomegranate', 'Papaya cubes', 'Pear', 'Grapes', 'Cucumber sticks', 'Watermelon cubes'];
+const TIFFIN_SNACKS = ['Roasted chana', 'Roasted makhana', 'A small handful of peanuts', 'Homemade til ladoo (1)', 'Sprouts chaat', 'Dates (2)'];
+const TIFFIN_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const weekNum = () => Math.floor((dayNum() + 3) / 7);
+function seeded(n) { let x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); }
+function tiffinPool() {
+  const d = S.profile.diet;
+  return TIFFINS.map((x, i) => ({ i, t: x[2] })).filter(({ t }) => (d === 'jain' ? t.includes('j') : d === 'egg' || d === 'nonveg' ? true : !t.includes('e'))).map((x) => x.i);
+}
+function tiffinPlan(reset) {
+  let p = store.get('tiffin', null);
+  const pool = tiffinPool();
+  if (reset || !p || p.week !== weekNum() || p.diet !== S.profile.diet || p.days.some((d) => !pool.includes(d.m))) {
+    const seed = reset ? Date.now() % 100000 : weekNum();
+    const order = [...pool].sort((a, b) => seeded(seed + a) - seeded(seed + b));
+    p = { week: weekNum(), diet: S.profile.diet, days: TIFFIN_DAYS.map((_, k) => ({ m: order[k % order.length], s: Math.floor(seeded(seed * 7 + k) * TIFFIN_SIDES.length), n: Math.floor(seeded(seed * 13 + k) * TIFFIN_SNACKS.length) })) };
+    store.set('tiffin', p);
+  }
+  return p;
+}
+function tiffinText(p) {
+  return '🍱 *SmartBite tiffin plan for this week*\n\n' + p.days.map((d, k) => `*${TIFFIN_DAYS[k]}*: ${TIFFINS[d.m][0]} + ${TIFFIN_SIDES[d.s]}\n   Short break: ${TIFFIN_SNACKS[d.n]}`).join('\n') + `\n\nHealthy desi tiffins, made easy 🙌 ${location.origin}`;
+}
+function screenTiffin() {
+  const p = tiffinPlan();
+  const todayK = Math.max(0, Math.min(5, (new Date().getDay() + 6) % 7));
+  view().innerHTML = `
+    <header class="bar"><a href="#/home" class="back" aria-label="Back">‹</a><h2>Tiffin planner</h2><span style="width:40px"></span></header>
+    <section class="card tf-hero"><span class="tf-art" aria-hidden="true">🍱</span><div><h3>This week's healthy tiffins</h3><p class="muted small">A filling main, a fruit and a short-break snack for every school day. ${S.profile.diet === 'jain' ? 'Jain-friendly picks only.' : S.profile.diet === 'egg' || S.profile.diet === 'nonveg' ? 'Includes some egg options.' : 'All vegetarian.'}</p></div></section>
+    <div class="tf-list">${p.days.map((d, k) => `<article class="card tf-day ${k === todayK ? 'tf-today' : ''}">
+      <div class="tf-top"><b class="tf-dname">${TIFFIN_DAYS[k]}${k === todayK ? ' · Today' : ''}</b><button class="btn-ghost sm" data-tfswap="${k}" aria-label="Change ${TIFFIN_DAYS[k]}'s tiffin">↻ Change</button></div>
+      <h4>${esc(TIFFINS[d.m][0])}</h4><p class="muted small">${esc(TIFFINS[d.m][1])}</p>
+      <div class="tf-chips"><span class="tf-chip fruit">🍎 ${esc(TIFFIN_SIDES[d.s])}</span><span class="tf-chip snack">🥜 ${esc(TIFFIN_SNACKS[d.n])}</span></div></article>`).join('')}</div>
+    <div class="btnrow"><button class="btn-ghost" id="tfNew">🔀 New week plan</button><button class="btn" id="tfShare">💬 Share on WhatsApp</button></div>
+    <p class="foot">Pack water, not juice or soft drinks. Keep fried snacks and sweets for special days.</p>`;
+  view().querySelectorAll('[data-tfswap]').forEach((b) => (b.onclick = () => {
+    const k = +b.dataset.tfswap, pool = tiffinPool(), used = p.days.map((d) => d.m);
+    const opts = pool.filter((i) => !used.includes(i)); const pick = opts.length ? opts[Math.floor(Math.random() * opts.length)] : pool[Math.floor(Math.random() * pool.length)];
+    p.days[k] = { m: pick, s: Math.floor(Math.random() * TIFFIN_SIDES.length), n: Math.floor(Math.random() * TIFFIN_SNACKS.length) };
+    store.set('tiffin', p); screenTiffin();
+  }));
+  $('#tfNew').onclick = () => { tiffinPlan(true); screenTiffin(); toast('New plan ready ✓'); };
+  $('#tfShare').onclick = async () => {
+    const text = tiffinText(p);
+    try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+  };
+}
+
+// ---------------- Weekly health report ----------------
+function weekReport() {
+  const since = Date.now() - 7 * 86400000;
+  const scans = S.history.filter((h) => h.at >= since);
+  const dayKey = (t) => new Date(t).toISOString().slice(0, 10);
+  const keys = [...Array(7)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return { key: d.toISOString().slice(0, 10), lab: d.toLocaleDateString('en-IN', { weekday: 'short' }) }; });
+  const perDay = keys.map((k) => ({ ...k, n: scans.filter((s) => dayKey(s.at) === k.key).length }));
+  const vk = (v) => verdictKey(v);
+  const good = scans.filter((s) => vk(s.verdict) === 'good').length, avoid = scans.filter((s) => vk(s.verdict) === 'avoid').length, okay = scans.length - good - avoid;
+  const avg = scans.length ? scans.reduce((a, s) => a + (s.score || 0), 0) / scans.length : 0;
+  const uniq = (arr) => { const seen = new Set(); return arr.filter((s) => (seen.has(s.title) ? false : seen.add(s.title))); };
+  const best = uniq([...scans].sort((a, b) => b.score - a.score)).slice(0, 3);
+  const worst = uniq([...scans].sort((a, b) => a.score - b.score)).filter((s) => vk(s.verdict) !== 'good' && !best.some((x) => x.title === s.title)).slice(0, 3);
+  const trk = S.tracker.filter((x) => keys.some((k) => k.key === x.day));
+  const loggedDays = new Set(trk.map((x) => x.day)).size;
+  const kid = S.profile.age === 'child', L = LIMITS[kid ? 'child' : 'adult'];
+  const avgOf = (k) => (loggedDays ? trk.reduce((a, x) => a + (x[k] || 0), 0) / loggedDays : 0);
+  const sugar = avgOf('sugar'), sodium = avgOf('sodium');
+  const coins = S.coins.log.filter((l) => l.at >= since && l.n > 0).reduce((a, l) => a + l.n, 0);
+  let tip;
+  if (!scans.length && !loggedDays) tip = 'Scan a few foods this week and your report fills up automatically.';
+  else if (loggedDays && sugar > L.sugar) tip = `Sugar averaged ${Math.round(sugar)} g a day, above the ${L.sugar} g limit. Swap one sweet drink a day for nimbu pani or chaas.`;
+  else if (loggedDays && sodium > L.sodium) tip = `Salt was high: about ${(sodium * 2.5 / 1000).toFixed(1)} g a day. Try roasted chana or fruit instead of namkeen.`;
+  else if (avoid && avoid >= good) tip = `${avoid} "Avoid" food${avoid === 1 ? '' : 's'} this week. Open a result and tap a healthier swap: you earn coins too!`;
+  else tip = good ? 'Great week! You chose more good foods than junk. Keep your scan streak going 🔥' : 'Nice start! Try to pick at least one "Good" food every day.';
+  return { scans, perDay, good, okay, avoid, avg, best, worst, loggedDays, sugar, sodium, L, coins, tip, streak: scanStreak() };
+}
+function screenReport() {
+  const r = weekReport();
+  const paid = S.plan !== 'free';
+  const max = Math.max(1, ...r.perDay.map((d) => d.n));
+  const row = (s) => `<div class="rp-row"><span class="pill v-${verdictKey(s.verdict)}">${s.score.toFixed(1)}</span><span class="grow">${esc(s.title)}</span></div>`;
+  const pct = (n) => (r.scans.length ? Math.round((n / r.scans.length) * 100) : 0);
+  view().innerHTML = `
+    <header class="bar"><a href="#/tracker" class="back" aria-label="Back">‹</a><h2>Weekly report</h2>${paid ? '<span class="pro-badge">PRO</span>' : '<span style="width:40px"></span>'}</header>
+    <section class="card rp-hero"><small>Last 7 days</small><h3>${r.scans.length ? `${r.scans.length} food${r.scans.length === 1 ? '' : 's'} checked` : 'No scans yet this week'}</h3>
+      <div class="rp-stats"><div><b>${r.scans.length ? r.avg.toFixed(1) : '–'}</b><span>average score</span></div><div><b>${r.streak}🔥</b><span>scan streak</span></div><div><b>+${r.coins}</b><span>coins earned</span></div></div></section>
+    <section class="card"><h3>What you scanned</h3>
+      <div class="rp-split" aria-label="${r.good} good, ${r.okay} okay, ${r.avoid} avoid">${r.scans.length ? `<i class="good" style="flex:${r.good || 0.001}"></i><i class="okay" style="flex:${r.okay || 0.001}"></i><i class="avoid" style="flex:${r.avoid || 0.001}"></i>` : '<i class="none" style="flex:1"></i>'}</div>
+      <div class="rp-legend"><span><i class="good"></i>Good ${pct(r.good)}%</span><span><i class="okay"></i>Okay ${pct(r.okay)}%</span><span><i class="avoid"></i>Avoid ${pct(r.avoid)}%</span></div>
+      <div class="rp-days">${r.perDay.map((d) => `<div><i style="height:${Math.round((d.n / max) * 100)}%"></i><b>${d.n || ''}</b><span>${d.lab}</span></div>`).join('')}</div></section>
+    <div class="${paid ? '' : 'rp-locked'}">
+      <section class="card rp-tip"><h3>💡 Tip for next week</h3><p>${esc(r.tip)}</p></section>
+      ${r.loggedDays ? `<section class="card"><h3>From your tracker (${r.loggedDays} day${r.loggedDays === 1 ? '' : 's'} logged)</h3>
+        <div class="rp-row"><span class="grow">🍬 Sugar a day</span><b class="${r.sugar > r.L.sugar ? 'err' : 'ok'}">${Math.round(r.sugar)} g / ${r.L.sugar} g</b></div>
+        <div class="rp-row"><span class="grow">🧂 Salt a day</span><b class="${r.sodium > r.L.sodium ? 'err' : 'ok'}">${(r.sodium * 2.5 / 1000).toFixed(1)} g / ${(r.L.sodium * 2.5 / 1000).toFixed(1)} g</b></div></section>` : ''}
+      ${r.best.length ? `<section class="card"><h3>🌟 Best picks</h3>${r.best.map(row).join('')}</section>` : ''}
+      ${r.worst.length ? `<section class="card"><h3>⚠️ Swap these next time</h3>${r.worst.map(row).join('')}</section>` : ''}
+    </div>
+    ${paid ? `<button class="btn wide" id="rpShare" style="margin:0 16px;width:calc(100% - 32px)">💬 Share my week</button>` : `<a class="card upsell rp-unlock" href="#/plans"><b>🔓 See your full report</b><p>Tips, best picks and foods to swap come with SmartBite Pro. Try it free for 7 days.</p></a>`}
+    <p class="foot">Made from the scans and foods saved on this phone.</p>`;
+  const sh = $('#rpShare');
+  if (sh) sh.onclick = async () => {
+    const text = `📈 My SmartBite week: ${r.scans.length} foods checked, average score ${r.avg.toFixed(1)}/5, ${r.good} good picks, ${r.streak}-day scan streak 🔥\n${r.tip}\n${location.origin}`;
+    try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+  };
+}
+
+// ---------------- Faster barcode scanning (the phone's built-in reader) ----------------
+async function nativeScanner(el, onCode) {
+  if (!('BarcodeDetector' in window) || !navigator.mediaDevices) return null;
+  let fmts = [];
+  try { fmts = await window.BarcodeDetector.getSupportedFormats(); } catch { return null; }
+  const want = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'].filter((f) => fmts.includes(f));
+  if (!want.includes('ean_13')) return null;
+  const det = new window.BarcodeDetector({ formats: want });
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  const v = document.createElement('video');
+  v.setAttribute('playsinline', ''); v.muted = true; v.srcObject = stream; v.className = 'native-cam';
+  el.prepend(v);
+  try { await v.play(); } catch {}
+  let stopped = false;
+  const stop = () => { if (stopped) return; stopped = true; stream.getTracks().forEach((t) => t.stop()); v.remove(); };
+  const tick = async () => {
+    if (stopped) return;
+    if (v.readyState >= 2) {
+      try {
+        const found = (await det.detect(v)).find((x) => /^\d{8,14}$/.test(x.rawValue));
+        if (found) { try { navigator.vibrate && navigator.vibrate(60); } catch {} stop(); onCode(found.rawValue); return; }
+      } catch {}
+    }
+    setTimeout(tick, 80);
+  };
+  tick();
+  return { stop: async () => stop(), clear() {}, native: true };
+}
+
 // ---------------- SmartBite Coins (1 coin = ₹1 off in the SmartBite shop) ----------------
 // Earn: welcome bonus + 5% back on every shop order (credited when online payment confirms the order).
 // Use: up to 20% of an order's value. Stored on this phone for this user; when payments go live the
@@ -2404,11 +2577,11 @@ async function route() {
   if (!S.session) { renderNav(''); screenLogin(); return; }
   document.body.classList.remove('pre-login');
   markActive();
-  const navKey = { add: 'scan', coins: 'home', dish: 'home', shop: 'shop', cart: 'shop', checkout: 'shop', game: 'home', play: 'home', quiz: 'home', sugar: 'home', swaps: 'swapday', home: 'home', scan: 'scan', result: 'scan', plate: 'scan', label: 'scan', compare: 'explore', explore: 'explore', reviews: 'home', tracker: 'tracker', profile: 'profile', plans: 'profile', partner: 'home' }[page] || 'home';
+  const navKey = { tiffin: 'home', report: 'tracker', add: 'scan', coins: 'home', dish: 'home', shop: 'shop', cart: 'shop', checkout: 'shop', game: 'home', play: 'home', quiz: 'home', sugar: 'home', swaps: 'swapday', home: 'home', scan: 'scan', result: 'scan', plate: 'scan', label: 'scan', compare: 'explore', explore: 'explore', reviews: 'home', tracker: 'tracker', profile: 'profile', plans: 'profile', partner: 'home' }[page] || 'home';
   renderNav(navKey);
   ping('view', { page });
   window.scrollTo(0, 0);
-  ({ add: () => screenAdd(arg), home: screenHome, game: screenGame, play: screenPlayHub, quiz: screenQuiz, sugar: screenSugar, swaps: screenSwaps, explore: screenExplore, coins: screenCoins, dish: () => screenDish(arg), shop: () => screenShop(arg), cart: screenCart, checkout: screenCheckout, reviews: screenHome, scan: () => screenScan(arg), result: screenResult, plate: screenPlate, label: screenLabel, compare: screenCompare, tracker: screenTracker, profile: screenProfile, plans: screenPlans, partner: screenPartner }[page] || screenHome)();
+  ({ tiffin: screenTiffin, report: screenReport, add: () => screenAdd(arg), home: screenHome, game: screenGame, play: screenPlayHub, quiz: screenQuiz, sugar: screenSugar, swaps: screenSwaps, explore: screenExplore, coins: screenCoins, dish: () => screenDish(arg), shop: () => screenShop(arg), cart: screenCart, checkout: screenCheckout, reviews: screenHome, scan: () => screenScan(arg), result: screenResult, plate: screenPlate, label: screenLabel, compare: screenCompare, tracker: screenTracker, profile: screenProfile, plans: screenPlans, partner: screenPartner }[page] || screenHome)();
   const v = view(); v.classList.remove('view-enter'); void v.offsetWidth; v.classList.add('view-enter');
 }
 
