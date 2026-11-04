@@ -1,12 +1,14 @@
 import { getStore } from '@netlify/blobs';
 import { limit, deny, safeEqual } from '../lib/guard.mjs';
+import { checkApproval } from '../lib/community.mjs';
 
 // Owner-only admin API. Every call must send the secret ADMIN_KEY (set in Netlify →
 // Site configuration → Environment variables) in the "x-admin-key" header.
 // Wrong keys are rate-limited (8 tries an hour), and nothing works if ADMIN_KEY is not set.
 //
-// GET  /api/admin?view=overview | reviews | enquiries | orders | usage
+// GET  /api/admin?view=overview | reviews | enquiries | orders | usage | submissions | photos&id=
 // POST /api/admin { action: 'delete-review', store: 'app-reviews' | 'product-reviews', id }
+//      /api/admin { action: 'approve-product', id, product: {...} } | { action: 'reject-product', id }
 
 const json = (b, status = 200) => Response.json(b, { status, headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const env = (k) => (globalThis.Netlify && Netlify.env.get(k)) || process.env[k] || '';
@@ -48,6 +50,27 @@ export default async (req, context) => {
       await st(b.store).delete(String(b.id));
       return json({ ok: true });
     }
+    if (b.action === 'approve-product' && b.id) {
+      const sub = await st('submissions').get(String(b.id), { type: 'json' });
+      if (!sub) return json({ ok: false, error: 'That request is gone.' }, 404);
+      const c = checkApproval(b.product || {});
+      if (!c.ok) return json(c, 400);
+      await st('community-products').setJSON(c.product.id, { ...c.product, approved_at: new Date().toISOString() });
+      await st('submissions').setJSON(String(b.id), { ...sub, status: 'approved', productId: c.product.id, decided_at: new Date().toISOString() });
+      await st('submission-photos').delete(String(b.id));
+      return json({ ok: true, product: c.product });
+    }
+    if (b.action === 'reject-product' && b.id) {
+      const sub = await st('submissions').get(String(b.id), { type: 'json' });
+      if (!sub) return json({ ok: false, error: 'That request is gone.' }, 404);
+      await st('submissions').setJSON(String(b.id), { ...sub, status: 'rejected', decided_at: new Date().toISOString() });
+      await st('submission-photos').delete(String(b.id));
+      return json({ ok: true });
+    }
+    if (b.action === 'remove-product' && b.productId) {
+      await st('community-products').delete(String(b.productId));
+      return json({ ok: true });
+    }
     return json({ ok: false, error: 'Unknown action.' }, 400);
   }
 
@@ -59,9 +82,17 @@ export default async (req, context) => {
   if (view === 'enquiries') return json({ ok: true, enquiries: await readAll('enquiries') });
   if (view === 'orders') return json({ ok: true, orders: (await readAll('orders')).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))) });
   if (view === 'usage') return json({ ok: true, days: await usage(30) });
+  if (view === 'submissions') {
+    const [subs, approved] = await Promise.all([readAll('submissions', 200), readAll('community-products', 500)]);
+    return json({ ok: true, submissions: subs, approved });
+  }
+  if (view === 'photos') {
+    const ph = await st('submission-photos').get(String(url.searchParams.get('id') || ''), { type: 'json' });
+    return ph ? json({ ok: true, ...ph }) : json({ ok: false, error: 'Photos not found.' }, 404);
+  }
 
   // overview
-  const [app, prod, enq, orders, days] = await Promise.all([readAll('app-reviews'), readAll('product-reviews'), readAll('enquiries'), readAll('orders'), usage(30)]);
+  const [app, prod, enq, orders, days, subs] = await Promise.all([readAll('app-reviews'), readAll('product-reviews'), readAll('enquiries'), readAll('orders'), usage(30), readAll('submissions', 500)]);
   const paid = orders.filter((o) => o.status === 'paid');
   const sum = (a, f) => a.reduce((s, x) => s + (f(x) || 0), 0);
   const last7 = days.slice(-7);
@@ -69,6 +100,7 @@ export default async (req, context) => {
     ok: true,
     reviews: { app: app.length, products: prod.length, avg: app.length ? Math.round((sum(app, (r) => r.rating) / app.length) * 10) / 10 : 0 },
     enquiries: enq.length,
+    submissions: { waiting: subs.filter((x) => x.status === 'new').length, approved: subs.filter((x) => x.status === 'approved').length },
     orders: { total: orders.length, paid: paid.length, live: sum(paid.filter((o) => !o.test), (o) => o.totalPaise) / 100, test: sum(paid.filter((o) => o.test), (o) => o.totalPaise) / 100 },
     usage: {
       opens7: sum(last7, (d) => d.opens), new7: sum(last7, (d) => d.newPhones), chats7: sum(last7, (d) => d.chats),

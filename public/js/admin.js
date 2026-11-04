@@ -32,7 +32,7 @@ function login(msg = '') {
 
 function shell() {
   $('#app').innerHTML = `<header class="top"><img src="/logo.svg" alt=""><h1>SmartBite Admin</h1><button id="out">Log out</button></header>
-    <div class="wrap"><nav class="tabs">${['overview', 'usage', 'reviews', 'enquiries', 'orders'].map((t) => `<button data-t="${t}" class="${t === TAB ? 'on' : ''}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</nav><div id="body"><p class="empty">Loading…</p></div></div>`;
+    <div class="wrap"><nav class="tabs">${[['overview', 'Overview'], ['requests', 'Add requests'], ['usage', 'Usage'], ['reviews', 'Reviews'], ['enquiries', 'Enquiries'], ['orders', 'Orders']].map(([t, l]) => `<button data-t="${t}" class="${t === TAB ? 'on' : ''}">${l}</button>`).join('')}</nav><div id="body"><p class="empty">Loading…</p></div></div>`;
   $('#out').onclick = () => { try { sessionStorage.removeItem('sb_admin_key'); } catch {} KEY = ''; login('Logged out.'); };
   document.querySelectorAll('[data-t]').forEach((b) => (b.onclick = () => { TAB = b.dataset.t; shell(); }));
   show(TAB);
@@ -50,11 +50,54 @@ async function show(tab) {
         <div class="stat"><div class="num">${d.usage.chats7}</div><small>Messages to Bitu, last 7 days</small></div>
         <div class="stat"><div class="num">${d.reviews.app}</div><small>App reviews · average ${d.reviews.avg} ★</small></div>
         <div class="stat"><div class="num">${d.reviews.products}</div><small>Product reviews</small></div>
+        <div class="stat"><div class="num">${(d.submissions && d.submissions.waiting) || 0}</div><small>Products waiting for you to check · ${(d.submissions && d.submissions.approved) || 0} added so far</small></div>
         <div class="stat"><div class="num">${d.enquiries}</div><small>Brand enquiries</small></div>
         <div class="stat"><div class="num">${d.orders.paid}</div><small>Paid orders · ${rupees(d.orders.live)} real${d.orders.test ? ` · ${rupees(d.orders.test)} test` : ''}</small></div>
       </div>
       <div class="card"><h3>Last 30 days</h3><p>${d.usage.opens30} app opens (once per phone per day), ${d.usage.new30} new phones.</p>
         <p class="note">Payments: ${d.payments ? '✅ Razorpay keys are set' : '⏸ Razorpay keys not added yet'}. Usage numbers are anonymous counts: SmartBite never stores names, IDs or IP addresses of people using the app.</p></div>`;
+    } else if (tab === 'requests') {
+      const { submissions, approved } = await api('submissions');
+      const waiting = submissions.filter((x) => x.status === 'new');
+      const N = [['kcal', 'Energy kcal'], ['protein', 'Protein g'], ['carbs', 'Carbs g'], ['sugar', 'Sugar g'], ['fibre', 'Fibre g'], ['fat', 'Fat g'], ['sat', 'Sat fat g'], ['sodium', 'Sodium mg']];
+      const v = (x) => (x === null || x === undefined ? '' : esc(x));
+      body.innerHTML = `<div class="card"><h3>Products people asked us to add (${waiting.length} waiting)</h3>
+        <p class="note">Check the numbers against the photo of the back of the pack, fix anything wrong, then approve. Approved products reach every phone within a few minutes and give the same verdict for everyone.</p></div>
+        ${waiting.length ? waiting.map((x) => { const r = x.read || {}, n = r.per100 || {}; return `<form class="card req" data-id="${esc(x.id)}">
+          <div class="req-top"><div class="ph" data-ph="${esc(x.id)}"><span class="muted">Loading photos…</span></div>
+          <div class="req-f">
+            <p class="muted small">Sent ${when(x.created_at)}${r.fromPack ? ' · numbers read from the back of the pack by AI' : r.per100 && Object.values(n).some((y) => y !== null) ? ' · numbers are an AI guess, check carefully' : ' · no numbers yet, type them from the photo'}</p>
+            <div class="f2"><label>Brand<input name="brand" value="${v(x.brand)}" required></label><label>Product name<input name="name" value="${v(x.name)}" required></label></div>
+            <div class="f2"><label>Barcode<input name="barcode" value="${v(x.barcode)}" inputmode="numeric"></label><label>Category<input name="cat" value="${v(r.category || 'Packaged food')}"></label></div>
+            <div class="f2"><label>Pack size (g or ml)<input name="packG" value="${v(r.packG || 50)}" inputmode="decimal"></label><label class="ckl"><input type="checkbox" name="drink" ${r.drink ? 'checked' : ''}> It is a drink (values per 100 ml)</label></div>
+            <p class="small"><b>Per 100 g / 100 ml</b></p>
+            <div class="f4">${N.map(([k, l]) => `<label>${l}<input name="n_${k}" value="${v(n[k])}" inputmode="decimal" required></label>`).join('')}</div>
+            <label>Ingredients (comma separated)<textarea name="ing" rows="2">${esc((r.ingredients || []).join(', '))}</textarea></label>
+            <div class="err" data-err></div>
+            <div class="btns"><button class="btn" type="submit">✓ Approve and add</button><button class="btn danger" type="button" data-rej>Reject</button></div>
+          </div></div></form>`; }).join('') : '<div class="card"><p class="empty">Nothing waiting. When someone scans a product we do not have, their photos appear here.</p></div>'}
+        <div class="card"><h3>Added from people's photos (${approved.length})</h3>${approved.length ? `<table><tr><th>Product</th><th>Barcode</th><th>Sugar / 100</th><th>Added</th><th></th></tr>${approved.map((p) => `<tr><td><b>${esc(p.brand)}</b> ${esc(p.name)}</td><td>${esc(p.barcode || '—')}</td><td>${esc(p.n && p.n.sugar)} g</td><td class="muted">${when(p.approved_at)}</td><td><button class="btn sm ghost" data-rm="${esc(p.id)}">Remove</button></td></tr>`).join('')}</table>` : '<p class="empty">None yet.</p>'}</div>`;
+      body.querySelectorAll('[data-ph]').forEach(async (box) => {
+        try { const ph = await api('photos&id=' + encodeURIComponent(box.dataset.ph)); box.innerHTML = [ph.front, ph.back].filter(Boolean).map((src, i) => `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="${i ? 'Back of pack' : 'Front of pack'}"><small>${i ? 'Back' : 'Front'}</small></a>`).join(''); }
+        catch { box.innerHTML = '<span class="muted">Photos could not load.</span>'; }
+      });
+      body.querySelectorAll('form.req').forEach((f) => {
+        const err = f.querySelector('[data-err]');
+        f.onsubmit = async (e) => {
+          e.preventDefault(); const F = new FormData(f); err.textContent = '';
+          const product = { brand: F.get('brand'), name: F.get('name'), barcode: F.get('barcode'), cat: F.get('cat'), packG: F.get('packG'), drink: !!F.get('drink'), ing: F.get('ing'), n: Object.fromEntries(N.map(([k]) => [k, F.get('n_' + k)])) };
+          const b = f.querySelector('[type=submit]'); b.disabled = true;
+          try { await api(null, { action: 'approve-product', id: f.dataset.id, product }); show('requests'); } catch (x) { err.textContent = x.message; b.disabled = false; }
+        };
+        f.querySelector('[data-rej]').onclick = async () => {
+          if (!confirm('Reject this request? Its photos will be deleted.')) return;
+          try { await api(null, { action: 'reject-product', id: f.dataset.id }); show('requests'); } catch (x) { err.textContent = x.message; }
+        };
+      });
+      body.querySelectorAll('[data-rm]').forEach((b) => (b.onclick = async () => {
+        if (!confirm('Remove this product from the app for everyone?')) return;
+        try { await api(null, { action: 'remove-product', productId: b.dataset.rm }); show('requests'); } catch (x) { alert(x.message); }
+      }));
     } else if (tab === 'usage') {
       const { days } = await api('usage');
       const max = Math.max(1, ...days.map((x) => x.opens));

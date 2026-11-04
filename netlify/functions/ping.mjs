@@ -8,7 +8,7 @@ import { sameSite, limit } from '../lib/guard.mjs';
 //  - view  : a screen was opened (page name only)
 //  - chat  : a message was sent to Bitu
 //  - time  : how many minutes a visit lasted (capped at 120)
-const PAGES = new Set(['home', 'scan', 'result', 'plate', 'label', 'swaps', 'explore', 'shop', 'cart', 'checkout', 'tracker', 'profile', 'plans', 'partner', 'play', 'quiz', 'sugar', 'game', 'compare', 'dish', 'coins', 'reviews']);
+const PAGES = new Set(['add', 'home', 'scan', 'result', 'plate', 'label', 'swaps', 'explore', 'shop', 'cart', 'checkout', 'tracker', 'profile', 'plans', 'partner', 'play', 'quiz', 'sugar', 'game', 'compare', 'dish', 'coins', 'reviews']);
 const day = () => new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10);
 
 export default async (req, context) => {

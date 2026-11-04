@@ -32,12 +32,15 @@ const S = {
   session: store.get('session', null),
   coins: store.get('coins', { bal: 0, log: [] }),
   days: store.get('days', []),
+  family: store.get('family', []),
   cart: store.get('cart', []),
   ship: store.get('ship', {}),
   current: null,
 };
 const save = (k) => store.set(k, S[k]);
 const t = (k) => (T[S.profile.lang] || T.en)[k] || T.en[k] || k;
+// Put a dietitian's name here once they have checked the verdict rules, e.g. 'Dr. A. B. Sharma, Registered Dietitian'.
+const REVIEWED_BY = '';
 const allProducts = () => [...S.custom, ...PRODUCTS];
 const findProduct = (id) => allProducts().find((p) => p.id === id);
 async function apiGet(path) {
@@ -49,6 +52,7 @@ async function apiGet(path) {
 async function openBarcode(bc) {
   const local = allProducts().find((p) => (p.barcode === bc || (p.alt && p.alt.includes(bc))) && ((p.ing && p.ing.length) || p.verified));
   if (local) return showProduct(local, local.src || 'Our database');
+  if (!navigator.onLine) { toast("You're offline. This product is not saved on your phone yet. Try again when you have internet.", 'bad'); return; }
   const done = showAnalysing('packet', 'Fetching product…');
   try {
     const { product } = await apiGet('/products/' + encodeURIComponent(bc));
@@ -58,7 +62,7 @@ async function openBarcode(bc) {
     if (mine) { if (!mine.barcode) mine.barcode = bc; return showProduct(mine, mine.src || 'Our database'); }
     showProduct(product, 'Open Food Facts');
   }
-  catch (e) { toast(e.status === 404 ? 'Not in any food database yet. Take a photo of the packet.' : e.message, 'bad'); if (e.status === 404) location.hash = '#/scan/packet'; }
+  catch (e) { if (e.status === 404) { toast('New product! Help us add it 🙌'); location.hash = '#/add/' + encodeURIComponent(bc); } else toast(e.message, 'bad'); }
   finally { done(); }
 }
 
@@ -158,6 +162,7 @@ function startTour() {
   });
 }
 function toast(msg, kind = '') {
+  document.querySelectorAll('.toast').forEach((o) => o.remove());
   const el = document.createElement('div');
   el.className = 'toast ' + kind; el.textContent = msg; el.setAttribute('role', 'status');
   document.body.appendChild(el);
@@ -290,6 +295,7 @@ function showAnalysing(mode, title) {
 function remember(p, source) {
   if (!findProduct(p.id) && !PRODUCTS.some((q) => q.id === p.id)) { S.custom.unshift({ ...p, src: source }); S.custom = S.custom.slice(0, 200); save('custom'); }
   const a = scoreFor(p, 'adult', S.profile);
+  onScanned();
   S.history = [{ kind: 'product', id: p.id, title: `${p.brand} ${p.name}`, cat: p.cat, imgSmall: p.imgSmall || null, score: a.score, verdict: a.verdict, at: Date.now() }, ...S.history.filter((h) => h.id !== p.id)].slice(0, 50);
   save('history');
 }
@@ -323,7 +329,7 @@ function todayEntries() { const d = today(); return S.tracker.filter((e) => e.da
 
 // ---------------- Home ----------------
 const HERO_CLIPS = [
-  { v: vid('thali'), p: pic('thali'), label: '🍛 Thali', href: '#/dish/thali', cta: 'See thali facts' },
+  { v: vid('thali'), p: `https://images.unsplash.com/photo-${IMG_SRC.thali}?w=900&q=70&auto=format&fit=crop`, label: '🍛 Thali', href: '#/dish/thali', cta: 'See thali facts' },
   { v: vid('street'), p: pic('samosa'), label: '🔥 Street snacks', href: '#/dish/panipuri', cta: 'See street food facts' },
   { v: vid('vadapav'), p: pic('vadapav'), label: '🍔 Vada pav', href: '#/dish/vadapav', cta: 'See vada pav facts' },
   { p: `${API}/asset/hero-1`, label: '🌅 Breakfast swaps', href: '#/swaps', cta: "See today's swaps" },
@@ -435,7 +441,7 @@ function screenHome() {
   const first = (S.profile.name || '').split(' ')[0];
   const initials = (S.profile.name || 'SB').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const scansToday = S.history.filter((h) => h.at && new Date(h.at).toDateString() === new Date().toDateString()).length;
-  const streak = dayStreak();
+  const streak = scanStreak();
   const lows = PRODUCTS.map((p) => ({ p, s: scoreFor(p, 'adult', S.profile).score })).filter((x) => x.s < 3).sort((a, b) => a.p.id.localeCompare(b.p.id));
   const pick = lows.length ? lows[new Date().getDate() % lows.length].p : null;
   const sw = pick ? swaps(pick, PRODUCTS, S.profile)[0] : null;
@@ -1372,7 +1378,9 @@ function screenScan(mode) {
   const left = Math.max(0, 5 - (S.aiCount.day === today() ? S.aiCount.n : 0));
   let body = '';
   if (mode === 'barcode') {
-    body = `<div id="reader" class="reader"><div class="scanline"></div></div>
+    const savedN = allProducts().filter((p) => p.barcode).length + PRODUCTS.reduce((k, p) => k + (p.alt ? p.alt.length : 0), 0);
+    body = `<p class="offline-ok ${navigator.onLine ? '' : 'off'}">${navigator.onLine ? '✓ Works without internet' : '📴 You are offline'} <span>· ${savedN} checked Indian products saved on your phone</span></p>
+      <div id="reader" class="reader"><div class="scanline"></div></div>
       <div class="btnrow"><button class="btn" id="camBtn">${esc(t('startCam'))}</button></div>
       ${searchBox()}`;
   } else if (mode === 'packet') {
@@ -1524,6 +1532,7 @@ async function runPlate(img) {
   S.current = { kind: 'plate', data: { ...res, img: img.preview }, source: 'AI estimate' };
   sessionStorage.setItem('sb_current', JSON.stringify({ ...S.current, data: { ...res } }));
   const title = (res.items || []).slice(0, 3).map((i) => i.name).join(', ') || 'Plate';
+  onScanned();
   S.history = [{ kind: 'plate', id: 'plate-' + Date.now(), title: '🍛 ' + title, score: +res.score || 3, verdict: res.verdict || 'Okay in moderation', at: Date.now() }, ...S.history].slice(0, 50);
   save('history');
   location.hash = '#/plate';
@@ -1566,6 +1575,10 @@ function screenResult() {
       <div class="vbox ${!focusChild ? 'focus' : ''} ${verdictKey(A.verdict) === 'avoid' ? 'shake' : ''}"><span class="who-lbl">👩 ${esc(t('adult'))}</span>${ring(A.score, 100, t('adult'))}${vPill(A.verdict)}</div>
       <div class="vbox ${focusChild ? 'focus' : ''} ${verdictKey(C.verdict) === 'avoid' ? 'shake' : ''}"><span class="who-lbl">🧒 ${esc(t('child'))}</span>${ring(C.score, 100, t('child'))}${vPill(C.verdict)}</div>
     </div>
+    ${spoonCard(p)}
+    ${familyCard(p)}
+    <button class="share-wa" data-act="share" type="button"><span class="wa-ic" aria-hidden="true">💬</span><span class="grow"><b>Share on WhatsApp</b><small>A cartoon verdict card for your family group</small></span><span aria-hidden="true">›</span></button>
+    ${!p.verified && !/Our database|Checked by SmartBite/i.test(cur.source || '') && (p.approx || /AI|Read from your pack|Open Food Facts/.test(cur.source || '')) ? (p.sentForCheck ? '<div class="card add-cta done"><span>🙏</span><span class="grow"><b>Thank you for helping!</b><small>The SmartBite team will check these numbers and add the product for everyone.</small></span></div>' : `<a class="card add-cta" href="#/add/${esc(p.barcode || '')}"><span>🙌</span><span class="grow"><b>Not checked by SmartBite yet</b><small>Snap the front and back label to help us add it. +${EARN.add[0]} 🪙</small></span>›</a>`) : ''}
     ${junkCard(p)}
     <div class="tls">${chip('Fat', n.fat, 'g', 17.5 / d, 3 / d)}${chip('Sat fat', n.sat, 'g', 5 / d, 1.5 / d)}${chip('Sugar', n.sugar, 'g', 22.5 / d, 5 / d)}${chip('Salt', (n.sodium || 0) * 2.5 / 1000, 'g', 1.5 / d, 0.3 / d)}</div>
     <div class="card"><div class="seg" id="who"><a class="${!focusChild ? 'on' : ''}" data-who="a">👩 ${esc(t('adult'))}</a><a class="${focusChild ? 'on' : ''}" data-who="c">🧒 ${esc(t('child'))}</a></div>
@@ -1588,7 +1601,9 @@ function screenResult() {
     <button class="card ask-bitu" data-act="bitu"><span class="bitu-av">🤖</span><span class="grow"><b>Ask Bitu about this</b><small>Is it OK for kids? What are these additives? Healthier swap?</small></span>›</button>
     <div class="btnrow"><button class="btn-ghost" data-act="cmp">＋ ${esc(t('addCompare'))}</button><button class="btn" data-act="trk">＋ ${esc(t('addTracker'))}</button></div>
     ${S.plan === 'free' ? sponsorCard() : ''}
-    <p class="foot">${esc(t('disclaimer'))}${p.approx ? ' Values marked approx are typical figures. Check the pack.' : ''}</p>`;
+    <p class="foot">${esc(t('disclaimer'))}${p.approx ? ' Values marked approx are typical figures. Check the pack.' : ''}${REVIEWED_BY ? ` Verdict rules reviewed by ${esc(REVIEWED_BY)}.` : ''}</p>`;
+  $('[data-act=share]').onclick = (e) => shareVerdict(p, e.currentTarget);
+  view().querySelectorAll('#swapList').forEach((l) => l.addEventListener('click', (e) => { if (e.target.closest('[data-open],[data-bc]')) earnOnce('swap', ...EARN.swap); }));
 
   const showWho = (w) => {
     const R = w === 'c' ? C : A;
@@ -1816,8 +1831,9 @@ function screenProfile() {
   const pr = S.profile;
   const conds = [['diabetes', 'Diabetes / blood sugar'], ['bp', 'High blood pressure'], ['heart', 'Heart health / cholesterol'], ['weightloss', 'Weight loss'], ['pregnancy', 'Pregnancy'], ['kids', 'Shopping for kids under 12']];
   const radio = (name, opts, cur) => `<div class="checks">${opts.map(([v, l]) => `<label class="ck"><input type="radio" name="${name}" value="${v}" ${cur === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>`;
-  const tabs = [['you', 'You'], ['health', 'Health'], ['look', 'Look & feel']];
+  const tabs = [['you', 'You'], ['family', 'Family'], ['health', 'Health'], ['look', 'Look & feel']];
   const panes = {
+    family: familyPane(),
     you: `<label>${esc(t('name'))}<input name="name" value="${esc(pr.name)}" maxlength="40" placeholder="What should we call you?" autocomplete="given-name"></label>
       <fieldset><legend>${esc(t('ageGroup'))}</legend>${radio('age', [['child', 'Child (under 12)'], ['teen', 'Teen'], ['adult', 'Adult'], ['senior', 'Senior']], pr.age)}</fieldset>
       <fieldset><legend>${esc(t('diet'))}</legend><div class="checks">${[['veg', 'Vegetarian', 'veg'], ['jain', 'Jain', 'veg'], ['vegan', 'Vegan', 'veg'], ['egg', 'Eggetarian', 'egg'], ['nonveg', 'Non-veg', 'nonveg']].map(([v, l, m]) => `<label class="ck"><input type="radio" name="diet" value="${v}" ${pr.diet === v ? 'checked' : ''}><span>${dietMark(m)} ${l}</span></label>`).join('')}</div></fieldset>
@@ -1852,8 +1868,10 @@ function screenProfile() {
     </div>
     <p class="foot">Your profile stays on this phone. ${esc(t('disclaimer'))}</p>`;
   view().querySelectorAll('[data-pftab]').forEach((a) => (a.onclick = () => { PF.tab = a.dataset.pftab; screenProfile(); }));
+  if (PF.tab === 'family') wireFamily();
   let timer = null;
   const commit = (quiet) => {
+    if (PF.tab === 'family') return;
     const f = new FormData($('#pf'));
     const p = { ...S.profile };
     if (PF.tab === 'you') Object.assign(p, { name: String(f.get('name') || '').trim(), age: f.get('age') || p.age, diet: f.get('diet') || p.diet, lang: f.get('lang') || p.lang });
@@ -2048,6 +2066,249 @@ function screenPartner() {
   };
 }
 
+// ---------------- Community products (approved from people's photos) ----------------
+function addCommunity(items) {
+  for (const p of items || []) {
+    if (!p || !p.id || !p.n) continue;
+    const i = PRODUCTS.findIndex((q) => q.id === p.id);
+    if (i >= 0) PRODUCTS[i] = p; else PRODUCTS.push(p);
+  }
+}
+addCommunity(store.get('community', []));
+async function loadCommunity() {
+  try { const j = await apiGet('/community'); store.set('community', j.items); addCommunity(j.items); } catch {}
+}
+
+// ---------------- Coins for healthy habits (small, capped per day) ----------------
+const EARN = { scan: [2, 'Daily scan bonus'], swap: [3, 'Chose a healthier swap'], add: [5, 'Helped add a product'] };
+function earnOnce(key, n, why, perDay = 1) {
+  const d = today();
+  let e = store.get('earned', { day: d, k: {} });
+  if (e.day !== d) e = { day: d, k: {} };
+  if ((e.k[key] || 0) >= perDay) return false;
+  e.k[key] = (e.k[key] || 0) + 1; store.set('earned', e);
+  addCoins(n, why);
+  setTimeout(() => toast(`+${n} 🪙 ${why}`), 900);
+  return true;
+}
+const scanDays = () => store.get('scanDays', []);
+function scanStreak() { const s = new Set(scanDays()); let n = 0; for (let d = dayNum(); s.has(d); d--) n++; return n; }
+function onScanned() {
+  const d = dayNum(), days = scanDays();
+  if (!days.includes(d)) store.set('scanDays', [...days, d].slice(-400));
+  earnOnce('scan', ...EARN.scan);
+  const st = scanStreak();
+  const bonus = { 3: 5, 7: 15, 30: 50 }[st];
+  if (bonus) earnOnce('streak' + st, bonus, `${st}-day scan streak 🔥`);
+}
+
+// ---------------- Sugar and salt in spoons ----------------
+const SPOON_SVG = '<svg viewBox="0 0 58 28" aria-hidden="true"><path d="M21 15 C 31 13, 43 11, 55 9 C 57 9 57 12 55 12.5 C 43 14, 31 16, 21 17.5 Z" fill="#CBD2DA" stroke="#241034" stroke-width="1.8" stroke-linejoin="round"/><ellipse cx="12" cy="16" rx="11" ry="8" fill="#DDE3EA" stroke="#241034" stroke-width="2.2"/><path d="M2.5 15 Q 6 4 12 4.5 Q 18 4 21.5 15 Q 12 12.5 2.5 15 Z" fill="#fff" stroke="#241034" stroke-width="1.5" stroke-linejoin="round"/><rect x="8" y="7" width="3" height="3" rx=".6" fill="#E6EAF0"/><rect x="13" y="8.5" width="2.6" height="2.6" rx=".6" fill="#E6EAF0"/></svg>';
+const halfRound = (x) => Math.round(x * 2) / 2;
+function spoonInfo(p) {
+  const n = p.n || {}, k = (p.packG || 100) / 100;
+  const sugarG = (n.sugar || 0) * k, saltG = ((n.sodium || 0) * 2.5 / 1000) * k;
+  const tsp = halfRound(sugarG / 4);
+  const st = saltG / 5;
+  const saltTxt = saltG < 0.15 ? 'barely any' : st < 0.2 ? 'a pinch' : st < 0.375 ? '¼ teaspoon' : st < 0.625 ? '½ teaspoon' : st < 0.875 ? '¾ teaspoon' : `${halfRound(st)} teaspoon${halfRound(st) > 1 ? 's' : ''}`;
+  return { sugarG, saltG, tsp, saltTxt, packTxt: `${Math.round(p.packG || 100)} ${p.drink ? 'ml' : 'g'}` };
+}
+function spoonCard(p) {
+  const s = spoonInfo(p), L = S.profile.lang;
+  const full = Math.floor(s.tsp), half = s.tsp - full >= 0.5;
+  const shown = Math.min(full, 12);
+  const pctAdult = Math.round((s.sugarG / 25) * 100);
+  const sugarLine = L === 'hi' ? `लगभग <b>${s.tsp} चम्मच चीनी</b>` : L === 'mr' ? `सुमारे <b>${s.tsp} चमचे साखर</b>` : `about <b>${s.tsp} teaspoon${s.tsp === 1 ? '' : 's'} of sugar</b>`;
+  return `<section class="card spoons">
+    <h3>${L === 'hi' ? 'एक पैक में' : L === 'mr' ? 'एका पॅकमध्ये' : 'In one pack'} <small class="muted">(${esc(s.packTxt)})</small></h3>
+    <div class="sp-row" aria-label="${s.tsp} teaspoons of sugar">${s.tsp === 0 ? '<span class="sp-none">🎉 0</span>' : SPOON_SVG.repeat(shown).replace(/<svg/g, '<svg class="sp"')}${half ? SPOON_SVG.replace('<svg', '<svg class="sp half"') : ''}${full > 12 ? `<b class="sp-more">+${full - 12}</b>` : ''}</div>
+    <p class="sp-txt">🥄 ${sugarLine} <span class="muted">(${r1(s.sugarG)} g)${s.sugarG >= 1 ? ` · ${pctAdult}% of an adult's ideal limit for a whole day` : ''}</span></p>
+    <p class="sp-txt">🧂 ${L === 'hi' ? 'नमक' : L === 'mr' ? 'मीठ' : 'Salt'}: <b>${esc(s.saltTxt)}</b> <span class="muted">(${r1(s.saltG)} g)</span></p>
+  </section>`;
+}
+
+// ---------------- Family: one scan, a verdict for everyone ----------------
+const FAM_ICON = { child: '🧒', teen: '🧑', adult: '🧑‍🦱', senior: '👵' };
+const famLimit = () => (S.plan === 'family' ? 4 : 1);
+function familyCard(p) {
+  const fam = S.family || [];
+  if (!fam.length) return `<a class="card fam-cta" href="#/profile" data-famtab><span class="fam-faces">👵🧒🧑‍🦱</span><span class="grow"><b>Shopping for the family?</b><small>Add Dada, Aai or the kids once, and every scan shows a verdict for each of them.</small></span>›</a>`;
+  const algs = detectAllergens(p);
+  const rows = fam.map((m) => {
+    const R = scoreFor(p, m.who === 'child' ? 'child' : 'adult', { conditions: m.conditions || [], allergens: m.allergens || [] });
+    const hit = algs.filter((a) => (m.allergens || []).includes(a));
+    const worst = [...R.breakdown].sort((a, b) => a.delta - b.delta)[0];
+    const note = hit.length ? `⚠️ Contains ${hit.join(', ')}` : worst && worst.delta < 0 ? worst.label : 'Nothing to worry about';
+    const vk = hit.length ? 'avoid' : verdictKey(R.verdict);
+    return `<div class="fam-row"><span class="fam-av">${FAM_ICON[m.who] || '🙂'}</span><span class="grow"><b>${esc(m.name)}</b><small class="${hit.length ? 'err' : 'muted'}">${esc(note)}</small></span><span class="pill v-${vk}">${esc(hit.length ? t('avoid') : t(vk))}</span></div>`;
+  }).join('');
+  return `<section class="card fam"><h3>👪 For your family</h3>${rows}<p class="muted small" style="margin-top:6px"><a href="#/profile" data-famtab>Edit family</a></p></section>`;
+}
+function familyPane() {
+  const fam = S.family || [];
+  const conds = [['diabetes', 'Diabetes'], ['bp', 'High BP'], ['heart', 'Heart / cholesterol'], ['weightloss', 'Weight loss'], ['pregnancy', 'Pregnancy']];
+  const full = fam.length >= famLimit();
+  return `<p class="muted small" style="margin:0">Add the people you shop for. Every product you scan then shows a verdict for each of them. It all stays on this phone.</p>
+    <div class="fam-list">${fam.length ? fam.map((m, i) => `<div class="fam-row"><span class="fam-av">${FAM_ICON[m.who] || '🙂'}</span><span class="grow"><b>${esc(m.name)}</b><small class="muted">${esc(m.who)}${(m.conditions || []).length ? ' · ' + esc(m.conditions.join(', ')) : ''}${(m.allergens || []).length ? ' · allergic to ' + esc(m.allergens.join(', ')) : ''}</small></span><button type="button" class="btn-ghost sm" data-famdel="${i}" aria-label="Remove ${esc(m.name)}">✕</button></div>`).join('') : '<p class="muted">No family members yet.</p>'}</div>
+    ${full ? `<p class="small fam-up">${S.plan === 'family' ? 'Your Family plan has room for 4 family members besides you.' : 'You can add 1 person for free. <a href="#/plans">The Family plan</a> covers up to 5 people, kids included.'}</p>` : `<fieldset class="fam-add"><legend>Add someone</legend>
+      <label>Name<input id="famName" maxlength="24" placeholder="e.g. Dada, Aai, Varad"></label>
+      <div class="checks">${[['child', 'Child (under 12)'], ['teen', 'Teen'], ['adult', 'Adult'], ['senior', 'Senior']].map(([v, l], k) => `<label class="ck"><input type="radio" name="famWho" value="${v}" ${k === 0 ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
+      <div class="checks">${conds.map(([v, l]) => `<label class="ck"><input type="checkbox" name="famCond" value="${v}"><span>${l}</span></label>`).join('')}</div>
+      <p class="small muted" style="margin:8px 0 4px">Allergies</p><div class="checks">${ALLERGENS.map((a) => `<label class="ck"><input type="checkbox" name="famAl" value="${a}"><span>${a}</span></label>`).join('')}</div>
+      <button type="button" class="btn" id="famAdd" style="margin-top:10px">＋ Add to family</button></fieldset>`}`;
+}
+function wireFamily() {
+  const add = $('#famAdd');
+  if (add) add.onclick = () => {
+    const name = $('#famName').value.trim();
+    if (!name) { toast('Please type a name.', 'bad'); return; }
+    const pick = (n) => [...view().querySelectorAll(`[name=${n}]:checked`)].map((x) => x.value);
+    S.family = [...(S.family || []), { name: name.slice(0, 24), who: pick('famWho')[0] || 'adult', conditions: pick('famCond'), allergens: pick('famAl') }].slice(0, famLimit());
+    save('family'); toast('Added ✓'); screenProfile();
+  };
+  view().querySelectorAll('[data-famdel]').forEach((b) => (b.onclick = () => { S.family.splice(+b.dataset.famdel, 1); save('family'); screenProfile(); }));
+}
+
+// ---------------- Share a verdict card on WhatsApp ----------------
+const APP_QR = '11111110000100011111101111111,10000010011010000100001000001,10111010111010101011101011101,10111010111010001101001011101,10111010110011110011001011101,10000010101101111000101000001,11111110101010101010101111111,00000000100011010001100000000,10111110011010110101001111100,10010101001110011001101110001,10010010010100000000000000000,11111100000000101011010011010,11000010101010000100100101100,11001001110001110111111110001,10010110010111110000010111100,10100000001111010010011010010,00101010001000111100100001100,11010101001000001111111110101,10010110111110010010111110100,10000101101100110000100100010,10111011110100011101111110111,00000000110011101010100011111,11111110000111111101101011100,10000010110011010010100010000,10111010111000110100111110110,10111010101001001101000001111,10111010111000010011001111110,10000010001110001000100101010,11111110101101100111010011100'.split(',');
+const loadImg = (src) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+const svgImg = (svg) => loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.includes('xmlns') ? svg : svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')));
+function wrapText(x, text, maxW, maxLines) {
+  const words = String(text).split(' '); const lines = []; let line = '';
+  for (const w of words) { const t2 = line ? line + ' ' + w : w; if (x.measureText(t2).width > maxW && line) { lines.push(line); line = w; } else line = t2; }
+  if (line) lines.push(line);
+  if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, '') + '…'; }
+  return lines;
+}
+function rrect(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
+async function makeShareCard(p) {
+  const A = scoreFor(p, 'adult', S.profile), C = scoreFor(p, 'child', S.profile), s = spoonInfo(p), j = junkMeter(p);
+  try { await Promise.all(['800 60px "Baloo 2"', '700 30px Mukta'].map((f) => document.fonts.load(f))); } catch {}
+  const W = 1080, H = 1900, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d'), INK = '#241034';
+  const VC = { good: '#1FA463', okay: '#F2A000', avoid: '#E63946' };
+  const D = '"Baloo 2", Mukta, system-ui, sans-serif', B = 'Mukta, system-ui, sans-serif';
+  x.fillStyle = '#FFF4DC'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#F6DDB0'; for (let yy = 30; yy < H; yy += 44) for (let xx = (yy / 44) % 2 ? 30 : 52; xx < W; xx += 44) { x.beginPath(); x.arc(xx, yy, 4, 0, 7); x.fill(); }
+  // header band
+  x.fillStyle = '#5B2A86'; rrect(x, 40, 40, W - 80, 150, 36); x.fill(); x.lineWidth = 8; x.strokeStyle = INK; x.stroke();
+  const logo = await loadImg('/logo.svg'); if (logo) x.drawImage(logo, 70, 62, 106, 106);
+  x.fillStyle = '#fff'; x.font = `800 64px ${D}`; x.fillText('SmartBite', 200, 125);
+  x.fillStyle = '#FFC93C'; x.font = `700 30px ${B}`; x.fillText('Scan. Know. Eat smart.', 204, 165);
+  // product name
+  x.fillStyle = '#6B5A78'; x.font = `700 34px ${B}`; x.fillText(String(p.brand || '').slice(0, 40), 70, 270);
+  x.fillStyle = INK; x.font = `800 66px ${D}`;
+  const nameLines = wrapText(x, p.name || '', W - 140, 2); nameLines.forEach((l, i) => x.fillText(l, 70, 340 + i * 70));
+  let y = 340 + nameLines.length * 70 + 10;
+  // verdict boxes
+  const box = (bx, label, R) => {
+    const vk = verdictKey(R.verdict);
+    x.fillStyle = INK; rrect(x, bx + 10, y + 10, 450, 190, 34); x.fill();
+    x.fillStyle = VC[vk]; rrect(x, bx, y, 450, 190, 34); x.fill(); x.lineWidth = 7; x.strokeStyle = INK; x.stroke();
+    x.fillStyle = '#fff'; x.font = `700 32px ${B}`; x.fillText(label, bx + 32, y + 52);
+    x.font = `800 62px ${D}`; x.fillText(vk === 'good' ? 'Good' : vk === 'avoid' ? 'Avoid' : 'Okay sometimes', bx + 32, y + 122, 400);
+    x.font = `700 32px ${B}`; x.fillText(`Score ${R.score.toFixed(1)} / 5`, bx + 32, y + 166);
+  };
+  box(70, '👩 Adults', A); box(W - 70 - 450, '🧒 Kids', C);
+  y += 250;
+  // spoons
+  const n = Math.min(Math.floor(s.tsp), 18), halfS = s.tsp - Math.floor(s.tsp) >= 0.5 && n < 18, icons = n + (halfS ? 1 : 0);
+  const rows = Math.max(1, Math.ceil(icons / 9)), boxH = 150 + rows * 64;
+  x.fillStyle = '#fff'; rrect(x, 70, y, W - 140, boxH, 34); x.fill(); x.lineWidth = 6; x.strokeStyle = INK; x.stroke();
+  x.fillStyle = INK; x.font = `800 46px ${D}`;
+  x.fillText(s.tsp ? `${s.tsp} teaspoon${s.tsp === 1 ? '' : 's'} of sugar` : 'No sugar to worry about 🎉', 104, y + 68);
+  const sp = await svgImg(SPOON_SVG);
+  if (sp) for (let i = 0; i < icons; i++) { if (halfS && i === n) x.globalAlpha = 0.4; x.drawImage(sp, 104 + (i % 9) * 96, y + 92 + Math.floor(i / 9) * 64, 92, 44); x.globalAlpha = 1; }
+  x.fillStyle = '#6B5A78'; x.font = `700 30px ${B}`;
+  x.fillText(`in one pack (${s.packTxt}) · salt: ${s.saltTxt}`, 104, y + boxH - 28, W - 210);
+  y += boxH + 44;
+  // junk meter + mascot
+  x.fillStyle = INK; x.font = `800 46px ${D}`; x.fillText(`${j.emoji} ${j.label}`, 70, y + 40, 560);
+  x.fillStyle = '#6B5A78'; x.font = `700 30px ${B}`; x.fillText(`Junk food meter ${j.pts}/7`, 70, y + 86);
+  const vkA = verdictKey(A.verdict);
+  const m = await svgImg(vkA === 'good' ? ART.apple : vkA === 'avoid' ? ART.chips : ART.carrot);
+  if (m) x.drawImage(m, 80, y + 116, 150, 186);
+  x.fillStyle = INK; x.font = `800 38px ${D}`;
+  wrapText(x, vkA === 'good' ? 'Good pick! Share it with your family.' : 'Check before you eat. Swap it for something better!', 340, 4).forEach((l, i) => x.fillText(l, 252, y + 160 + i * 44));
+  // QR
+  const qx = W - 70 - 300, qy = y + 10, cell = 8;
+  x.fillStyle = INK; rrect(x, qx + 8, qy + 8, 300, 360, 30); x.fill();
+  x.fillStyle = '#fff'; rrect(x, qx, qy, 300, 360, 30); x.fill(); x.lineWidth = 6; x.strokeStyle = INK; x.stroke();
+  const off = qx + (300 - APP_QR.length * cell) / 2;
+  x.fillStyle = INK; APP_QR.forEach((row, r) => [...row].forEach((v, k) => { if (v === '1') x.fillRect(off + k * cell, qy + 30 + r * cell, cell, cell); }));
+  x.font = `800 30px ${D}`; x.textAlign = 'center'; x.fillText('Scan to check', qx + 150, qy + 300); x.fillText('your food', qx + 150, qy + 336); x.textAlign = 'left';
+  // footer, then trim the canvas to the content
+  const endY = qy + 360 + 70;
+  x.fillStyle = '#6B5A78'; x.font = `600 26px ${B}`; x.textAlign = 'center'; x.fillText('Made in an Atal Tinkering Lab 🇮🇳 · for awareness, not medical advice', W / 2, endY, W - 120); x.textAlign = 'left';
+  const out = document.createElement('canvas'); out.width = W; out.height = endY + 40;
+  out.getContext('2d').drawImage(c, 0, 0);
+  return new Promise((res) => out.toBlob(res, 'image/png'));
+}
+async function shareVerdict(p, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const blob = await makeShareCard(p);
+    const file = new File([blob], 'smartbite-' + String(p.name || 'verdict').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) + '.png', { type: 'image/png' });
+    const text = `I checked ${p.brand} ${p.name} on SmartBite 🥄 Check what's really in your food: ${location.origin}`;
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast('Picture saved. Attach it in WhatsApp ✓');
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+  } catch (e) { if (e && e.name !== 'AbortError') toast('Could not make the picture. Try again.', 'bad'); }
+  finally { if (btn) btn.disabled = false; }
+}
+
+// ---------------- Help us add this product ----------------
+function shrinkPhoto(dataUrl, max = 1000, q = 0.72) {
+  return new Promise((res) => {
+    const i = new Image();
+    i.onload = () => { const k = Math.min(1, max / Math.max(i.width, i.height)); const c = document.createElement('canvas'); c.width = Math.round(i.width * k); c.height = Math.round(i.height * k); c.getContext('2d').drawImage(i, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', q)); };
+    i.onerror = () => res(dataUrl); i.src = dataUrl;
+  });
+}
+function screenAdd(bc) {
+  bc = String(bc || '').replace(/\D/g, '');
+  view().innerHTML = `
+    <header class="bar"><a href="#/scan/barcode" class="back" aria-label="Back">‹</a><h2>Help us add it</h2><span style="width:40px"></span></header>
+    <section class="card add-hero"><span class="add-art" aria-hidden="true">${ART.phone}</span><div><h3>This product is new to us!</h3><p>Snap the <b>front</b> and the <b>back label</b>. You get your result now, and the SmartBite team checks it so everyone gets the right verdict.</p>${bc ? `<span class="chip">Barcode #${esc(bc)}</span>` : ''}</div></section>
+    <div class="shots">${shot('front', 'Front of pack', true, 'chips')}${shot('back', 'Back label with the nutrition table', false, 'spices')}</div>
+    <details class="card add-more"><summary>Type the name (optional)</summary><label>Brand<input id="adBrand" maxlength="60" placeholder="e.g. Haldiram's"></label><label>Product<input id="adName" maxlength="90" placeholder="e.g. Aloo Bhujia"></label></details>
+    <button class="btn hot wide" id="adGo" disabled>Send and see my result</button>
+    <p class="muted small pad centred">Only the two photos are sent. No name, number or location. +${EARN.add[0]} 🪙 for helping.</p>`;
+  const shots = {};
+  view().querySelectorAll('input[type=file]').forEach((inp) => inp.addEventListener('change', async () => {
+    const f = inp.files[0]; if (!f) return;
+    const box = inp.closest('.shot');
+    try { shots[inp.dataset.slot] = await fileToB64(f); box.style.backgroundImage = `url(${shots[inp.dataset.slot].preview})`; box.classList.add('has'); }
+    catch { toast('Could not read that photo. Try another one.', 'bad'); }
+    $('#adGo').disabled = !shots.front;
+  }));
+  $('#adGo').onclick = async () => {
+    if (!navigator.onLine) { toast("You're offline. Please try again when you have internet.", 'bad'); return; }
+    const go = $('#adGo'); go.disabled = true;
+    const done = showAnalysing('packet', 'Reading your pack…');
+    let res = null;
+    try {
+      const canAI = S.plan !== 'free' || (S.aiCount.day === today() ? S.aiCount.n : 0) < 5;
+      if (canAI) { try { res = await callAI('packet', [shots.front, shots.back].filter(Boolean), shots.back ? 'Image 1 is the FRONT of the pack, image 2 is the BACK (nutrition table and ingredients).' : 'Image 1 is the FRONT of the pack.'); } catch {} }
+      const id = (res && res.identified) || {}, ai = (res && res.product) || {};
+      const read = res ? { brand: id.brand, name: [id.name, id.variant].filter(Boolean).join(' '), category: ai.category, drink: !!ai.isDrink, fromPack: !!res.readFromPack, packG: ai.packSize, per100: ai.per100 || {}, ingredients: ai.ingredients || [] } : undefined;
+      const body = { barcode: bc, brand: $('#adBrand').value, name: $('#adName').value, front: await shrinkPhoto(shots.front.preview), back: shots.back ? await shrinkPhoto(shots.back.preview) : undefined, read };
+      const r = await fetch(API + '/submit-product', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || 'Could not send. Please try again.');
+      earnOnce('add', ...EARN.add, 3);
+      if (res && ai.per100 && (id.name || id.brand)) {
+        const label = `${id.brand || ''} ${id.name || ''}`.trim();
+        showProduct({ id: 'ai-' + (bc || label.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60)), brand: id.brand || body.brand || 'Unknown', name: read.name || body.name || 'Product', cat: ai.category || 'Packaged food', drink: !!ai.isDrink, packG: +ai.packSize || 50, n: ai.per100, ing: ai.ingredients || [], allergens: (ai.allergens || []).map((a) => String(a).toLowerCase()), veg: ai.veg !== false, approx: !res.readFromPack, barcode: bc || undefined, sentForCheck: true },
+          res.readFromPack ? 'Read from your pack · sent to SmartBite for checking' : 'AI estimate · sent to SmartBite for checking');
+      } else { toast('Thank you! 🙏 We will check it and add it soon.'); location.hash = '#/home'; }
+    } catch (e) { toast(e.message, 'bad'); go.disabled = false; }
+    finally { done(); }
+  };
+}
+
 // ---------------- SmartBite Coins (1 coin = ₹1 off in the SmartBite shop) ----------------
 // Earn: welcome bonus + 5% back on every shop order (credited when online payment confirms the order).
 // Use: up to 20% of an order's value. Stored on this phone for this user; when payments go live the
@@ -2073,6 +2334,13 @@ function screenCoins() {
       <div class="ch-row"><span class="ch-n">2</span><div><b>Use them next time</b><p>Pay up to 20% of any order with coins at checkout.</p></div></div>
       <div class="ch-row"><span class="ch-n">3</span><div><b>Welcome gift</b><p>Every new SmartBite login starts with ${WELCOME_COINS} coins.</p></div></div>
       <a class="btn hot wide" href="#/shop" style="margin-top:6px">Shop and earn</a>
+    </section>
+    <section class="card coin-how">
+      <h3>Earn coins for healthy habits</h3>
+      <div class="ch-row"><span class="ch-n">🔍</span><div><b>Scan before you buy</b><p>+${EARN.scan[0]} coins for your first scan each day.</p></div></div>
+      <div class="ch-row"><span class="ch-n">🌱</span><div><b>Pick a healthier swap</b><p>+${EARN.swap[0]} coins when you open a better option from a result (once a day).</p></div></div>
+      <div class="ch-row"><span class="ch-n">🔥</span><div><b>Keep your scan streak</b><p>+5 at 3 days, +15 at 7 days and +50 at 30 days in a row. Now: <b>${scanStreak()} day${scanStreak() === 1 ? '' : 's'}</b>.</p></div></div>
+      <div class="ch-row"><span class="ch-n">🙌</span><div><b>Help add a product</b><p>+${EARN.add[0]} coins each time you send photos of a product we don't have.</p></div></div>
     </section>
     <section class="card"><h3>Coin history</h3>${S.coins.log.length ? S.coins.log.map((l) => `<div class="tot-row"><span>${esc(l.why)}<br><small class="muted">${new Date(l.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</small></span><b class="${l.n > 0 ? 'ok' : 'err'}">${l.n > 0 ? '+' : ''}${l.n}</b></div>`).join('') : '<p class="muted">No coins yet.</p>'}</section>
     <p class="foot">Coins are for this login on this phone and are cleared when you log out.</p>`;
@@ -2136,11 +2404,11 @@ async function route() {
   if (!S.session) { renderNav(''); screenLogin(); return; }
   document.body.classList.remove('pre-login');
   markActive();
-  const navKey = { coins: 'home', dish: 'home', shop: 'shop', cart: 'shop', checkout: 'shop', game: 'home', play: 'home', quiz: 'home', sugar: 'home', swaps: 'swapday', home: 'home', scan: 'scan', result: 'scan', plate: 'scan', label: 'scan', compare: 'explore', explore: 'explore', reviews: 'home', tracker: 'tracker', profile: 'profile', plans: 'profile', partner: 'home' }[page] || 'home';
+  const navKey = { add: 'scan', coins: 'home', dish: 'home', shop: 'shop', cart: 'shop', checkout: 'shop', game: 'home', play: 'home', quiz: 'home', sugar: 'home', swaps: 'swapday', home: 'home', scan: 'scan', result: 'scan', plate: 'scan', label: 'scan', compare: 'explore', explore: 'explore', reviews: 'home', tracker: 'tracker', profile: 'profile', plans: 'profile', partner: 'home' }[page] || 'home';
   renderNav(navKey);
   ping('view', { page });
   window.scrollTo(0, 0);
-  ({ home: screenHome, game: screenGame, play: screenPlayHub, quiz: screenQuiz, sugar: screenSugar, swaps: screenSwaps, explore: screenExplore, coins: screenCoins, dish: () => screenDish(arg), shop: () => screenShop(arg), cart: screenCart, checkout: screenCheckout, reviews: screenHome, scan: () => screenScan(arg), result: screenResult, plate: screenPlate, label: screenLabel, compare: screenCompare, tracker: screenTracker, profile: screenProfile, plans: screenPlans, partner: screenPartner }[page] || screenHome)();
+  ({ add: () => screenAdd(arg), home: screenHome, game: screenGame, play: screenPlayHub, quiz: screenQuiz, sugar: screenSugar, swaps: screenSwaps, explore: screenExplore, coins: screenCoins, dish: () => screenDish(arg), shop: () => screenShop(arg), cart: screenCart, checkout: screenCheckout, reviews: screenHome, scan: () => screenScan(arg), result: screenResult, plate: screenPlate, label: screenLabel, compare: screenCompare, tracker: screenTracker, profile: screenProfile, plans: screenPlans, partner: screenPartner }[page] || screenHome)();
   const v = view(); v.classList.remove('view-enter'); void v.offsetWidth; v.classList.add('view-enter');
 }
 
@@ -2229,6 +2497,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-tour]')) { e.preventDefault(); startTour(); }
+  if (e.target.closest('[data-famtab]')) { PF.tab = 'family'; if (/^#\/profile/.test(location.hash)) { e.preventDefault(); screenProfile(); } }
   if (e.target.closest('[data-orders]')) {
     e.preventDefault();
     const list = S.orders || [], pi = S.planInfo;
@@ -2246,6 +2515,7 @@ setInterval(() => { if (S.profile.theme === 'auto') applyTheme(); }, 60000);
 mountChat();
 checkPlanExpiry();
 if (S.session) usageOpen();
+loadCommunity();
 route();
 if (S.session && !store.get('toured', false)) setTimeout(startTour, 1200);
 

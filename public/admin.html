@@ -46,6 +46,19 @@
   .hbar i { display: block; height: 12px; border-radius: 99px; background: var(--jamun); }
   .muted { color: var(--muted); } .note { font-size: 13px; color: var(--muted); }
   .empty { color: var(--muted); padding: 10px 0; }
+  .req-top { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 700px) { .req-top { grid-template-columns: 1fr; } }
+  .ph { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
+  .ph a { display: block; text-align: center; color: var(--muted); text-decoration: none; }
+  .ph img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
+  .req label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .req input:not([type=checkbox]), .req textarea { width: 100%; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; font: 500 15px Mukta, system-ui, sans-serif; color: var(--ink); margin-top: 2px; }
+  .f2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .f4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+  @media (max-width: 520px) { .f4 { grid-template-columns: 1fr 1fr; } .f2 { grid-template-columns: 1fr; } }
+  .ckl { display: flex !important; gap: 6px; align-items: center; padding-top: 18px; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .small { font-size: 13px; }
 </style>
 </head>
 <body>
